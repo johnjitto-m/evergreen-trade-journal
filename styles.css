@@ -2080,3 +2080,19 @@ select {
     flex: 1 1 160px;
   }
 }
+
+.weekly-trades-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.weekly-trades-table th:last-child,
+.weekly-trades-table td:last-child {
+  padding-right: 6px;
+}
+
+.weekly-trades-table .actions-cell {
+  width: max-content;
+  max-width: 100%;
+  justify-content: flex-start;
+}
