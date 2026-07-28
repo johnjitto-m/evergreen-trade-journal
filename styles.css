@@ -2930,3 +2930,93 @@ button.review-chart-media {
     grid-column: auto;
   }
 }
+
+/* ================================================================
+   Centered professional trade-review popup
+   Keeps the Add Trade visual language without stretching edge-to-edge.
+   ================================================================ */
+@media (min-width: 1281px) and (min-height: 791px) {
+  .detail-backdrop {
+    padding: 32px 40px;
+  }
+
+  .trade-detail-modal {
+    width: min(1400px, calc(100vw - 80px));
+    height: min(820px, calc(100dvh - 64px));
+    max-width: 1400px;
+    max-height: 820px;
+    border-radius: 24px;
+    box-shadow:
+      0 34px 110px rgba(0, 0, 0, 0.68),
+      0 0 0 1px rgba(74, 111, 151, 0.12);
+  }
+
+  .trade-detail-modal .detail-header {
+    min-height: 60px;
+    padding: 10px 16px;
+  }
+
+  .trade-detail-content {
+    padding: 10px;
+  }
+
+  .trade-view-shell {
+    gap: 9px;
+  }
+
+  .trade-view-basic-panel {
+    padding: 8px 10px 9px;
+  }
+
+  .trade-view-basic-grid {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .review-basic-field {
+    min-height: 42px;
+    padding: 5px 7px;
+  }
+
+  .trade-view-main {
+    grid-template-columns: minmax(320px, 0.86fr) minmax(0, 2.14fr);
+    gap: 9px;
+  }
+
+  .trade-view-analysis-grid {
+    grid-template-columns: minmax(0, 1.56fr) minmax(310px, 0.94fr);
+    gap: 9px;
+  }
+
+  .review-chart-panel,
+  .review-analysis-panel {
+    padding: 9px;
+    border-radius: 14px;
+  }
+
+  .review-question-grid {
+    gap: 5px;
+  }
+
+  .review-question-grid--htf {
+    grid-template-rows: repeat(4, minmax(82px, 1fr));
+  }
+
+  .review-question-grid--ltf {
+    grid-template-rows: repeat(4, minmax(82px, 1fr));
+  }
+
+  .review-question-card {
+    justify-content: flex-start;
+    padding: 7px 8px;
+  }
+
+  .review-question-title {
+    margin-bottom: 5px;
+  }
+
+  .review-answer-card {
+    min-height: 25px;
+    padding: 4px 7px;
+  }
+}

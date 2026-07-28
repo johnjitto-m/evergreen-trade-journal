@@ -162,3 +162,8 @@ The HTF Analysis step now records whether the selected POI is in **Premium** or 
 ## v17 — Add-trade-style trade review
 
 The View Trade screen now mirrors the Add Trade visual language in one full-screen, read-only page. Basic details, HTF questions, LTF questions, selected answers, chart previews, and links are visible without scrolling on normal desktop displays. Smaller screens fall back to a responsive scrollable layout.
+
+
+## Centered trade-review popup (v18)
+
+The View Trade screen now opens as a centered 1400px maximum-width popup instead of stretching edge-to-edge. Desktop layouts keep all saved Basic, HTF, LTF, and chart-reference information visible in a balanced Add Trade-style review. Smaller screens retain the responsive scroll fallback.
