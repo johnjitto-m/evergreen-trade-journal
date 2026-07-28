@@ -765,9 +765,23 @@ function captureHtfForm() {
     poiSupported: formData.get("poiSupported") || "",
     poiSupportType: formData.getAll("poiSupportType"),
     thirdCandle: formData.get("thirdCandle") || "",
+    fvgInteraction: formData.get("fvgInteraction") || "",
     poiMitigation: formData.getAll("poiMitigation")
   };
+  applySweepEntryDefault();
   return currentDraft.htf;
+}
+
+function applySweepEntryDefault() {
+  if (currentDraft.htf?.fvgInteraction !== "Sweep") return;
+  if (!currentDraft.ltf) currentDraft.ltf = {};
+  currentDraft.ltf.entryLevel = "Spartan CISD";
+
+  const spartanOption = elements.ltfForm.querySelector(
+    'input[name="entryLevel"][value="Spartan CISD"]'
+  );
+  if (spartanOption) spartanOption.checked = true;
+  syncChoiceCards();
 }
 
 function captureLtfForm() {
@@ -798,6 +812,7 @@ function restoreDraftIntoForms() {
 
   setFormValues(elements.htfForm, currentDraft.htf);
   setFormValues(elements.ltfForm, currentDraft.ltf);
+  applySweepEntryDefault();
   if (!elements.riskAmount.value) elements.riskAmount.value = DEFAULT_RISK_AMOUNT;
   updateConditionalPanels();
   updateCalculatedPnl();
@@ -894,18 +909,15 @@ async function handleLtfSubmit(event) {
   captureLtfForm();
 
   if (!elements.ltfForm.checkValidity()) {
-    elements.ltfMessage.textContent = "Complete all required LTF and outcome fields.";
+    elements.ltfMessage.textContent = "Correct the invalid numeric value before saving.";
     elements.ltfForm.reportValidity();
     return;
   }
-  if (!currentDraft.ltf.entryLevel) {
-    elements.ltfMessage.textContent = "Select the entry level used.";
-    return;
-  }
 
-  const riskAmount = Number(currentDraft.ltf.riskAmount || 0);
-  const riskReward = Number(currentDraft.ltf.riskReward || 0);
-  const pnl = calculatePnl(currentDraft.ltf.result, riskAmount, riskReward);
+  const riskAmount = optionalNumber(currentDraft.ltf.riskAmount);
+  const riskReward = optionalNumber(currentDraft.ltf.riskReward);
+  const slPips = optionalNumber(currentDraft.ltf.slPips);
+  const pnl = calculatePnl(currentDraft.ltf.result, riskAmount ?? 0, riskReward ?? 0);
   const basic = currentDraft.basic;
 
   const trade = {
@@ -924,8 +936,8 @@ async function handleLtfSubmit(event) {
     result: currentDraft.ltf.result,
     rr: riskReward,
     riskAmount,
-    pnl,
-    slPips: Number(currentDraft.ltf.slPips),
+    pnl: currentDraft.ltf.result ? pnl : null,
+    slPips,
     htfAnalysis: structuredClone(currentDraft.htf),
     ltfAnalysis: structuredClone(currentDraft.ltf),
     createdAt: currentDraft.createdAt,
@@ -956,6 +968,12 @@ function closeModalWithoutSavingDraft() {
   elements.modal.hidden = true;
   document.body.classList.remove("modal-open");
   currentStep = "basic";
+}
+
+function optionalNumber(value) {
+  if (value === null || value === undefined || String(value).trim() === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 function calculatePnl(result, riskAmount, riskReward) {
@@ -999,7 +1017,6 @@ function renderOptionCards({ container, values, name, type, selected }) {
     input.name = name;
     input.value = value;
     input.checked = selected.includes(value);
-    if (type === "radio") input.required = true;
     const strong = document.createElement("strong");
     strong.textContent = value;
     label.append(input, strong);
@@ -1384,7 +1401,7 @@ function updateChartPreview(type) {
 
 const RESEARCH_FILTER_KEYS = [
   "direction", "status", "pair", "result", "session", "htf", "entryAttempt", "fvgStatus",
-  "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "poiMitigation",
+  "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiMitigation",
   "entryLevel", "beLogic"
 ];
 
@@ -1398,7 +1415,8 @@ const INSIGHT_LABELS = {
   smtStrength: "SMT strength",
   poiSupportType: "POI support",
   thirdCandle: "Third candle",
-  poiMitigation: "Mitigation",
+  fvgInteraction: "FVG interaction",
+  poiMitigation: "Mitigation behaviour",
   entryLevel: "Entry level",
   beLogic: "BE logic"
 };
@@ -1411,6 +1429,7 @@ function getTradeField(trade, key) {
     poiSupported: trade.htfAnalysis?.poiSupported,
     poiSupportType: trade.htfAnalysis?.poiSupportType,
     thirdCandle: trade.htfAnalysis?.thirdCandle,
+    fvgInteraction: trade.htfAnalysis?.fvgInteraction,
     poiMitigation: trade.htfAnalysis?.poiMitigation,
     entryLevel: trade.ltfAnalysis?.entryLevel,
     beLogic: trade.ltfAnalysis?.beLogic
@@ -1466,6 +1485,7 @@ function tradeSearchText(trade) {
     getTradeField(trade, "smtPair"), getTradeField(trade, "poiSupported"),
     ...getComparableValues(getTradeField(trade, "poiSupportType")),
     getTradeField(trade, "thirdCandle"),
+    getTradeField(trade, "fvgInteraction"),
     ...getComparableValues(getTradeField(trade, "poiMitigation")),
     getTradeField(trade, "entryLevel"), getTradeField(trade, "beLogic")
   ];
@@ -1523,16 +1543,17 @@ function renderResearchView() {
 
 function updateResearchStats(filtered) {
   const counted = filtered.filter((trade) => trade.status === "Took Trade");
-  const wins = counted.filter((trade) => trade.result === "TP").length;
-  const pnl = counted.reduce((total, trade) => total + Number(trade.pnl || 0), 0);
-  const rrTrades = counted.filter((trade) => Number.isFinite(Number(trade.rr)) && Number(trade.rr) > 0);
+  const completed = counted.filter((trade) => ["TP", "SL", "BE"].includes(trade.result));
+  const wins = completed.filter((trade) => trade.result === "TP").length;
+  const pnl = completed.reduce((total, trade) => total + Number(trade.pnl || 0), 0);
+  const rrTrades = completed.filter((trade) => Number.isFinite(Number(trade.rr)) && Number(trade.rr) > 0);
   const avgRr = rrTrades.length
     ? rrTrades.reduce((total, trade) => total + Number(trade.rr), 0) / rrTrades.length
     : 0;
 
   elements.filteredPnl.textContent = formatCurrency(pnl);
   elements.filteredPnl.classList.toggle("negative", pnl < 0);
-  elements.filteredWinRate.textContent = counted.length ? `${((wins / counted.length) * 100).toFixed(1)}%` : "0.0%";
+  elements.filteredWinRate.textContent = completed.length ? `${((wins / completed.length) * 100).toFixed(1)}%` : "0.0%";
   elements.filteredTrades.textContent = String(filtered.length);
   elements.filteredAvgRr.textContent = `${avgRr.toFixed(2)}R`;
 }
@@ -1550,7 +1571,7 @@ function mostCommonInsight(subset, key) {
 }
 
 function renderSimilarityList(container, subset) {
-  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "poiMitigation", "entryLevel", "beLogic"];
+  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiMitigation", "entryLevel", "beLogic"];
   const insights = insightKeys.map((key) => mostCommonInsight(subset, key)).filter(Boolean).slice(0, 6);
   if (!insights.length) {
     container.innerHTML = '<p class="empty-insight">Not enough recorded trades for a similarity pattern.</p>';
@@ -1601,12 +1622,15 @@ function bestPerformance(tradesToGroup, key, worst = false) {
 }
 
 function renderEdgeCards(filtered) {
-  const counted = filtered.filter((trade) => trade.status === "Took Trade");
+  const counted = filtered.filter((trade) =>
+    trade.status === "Took Trade" && ["TP", "SL", "BE"].includes(trade.result)
+  );
   const definitions = [
     ["BEST PAIR", "pair", false],
     ["BEST SESSION", "session", false],
     ["BEST SMT TYPE", "smtStrength", false],
     ["BEST POI SUPPORT", "poiSupportType", false],
+    ["BEST FVG INTERACTION", "fvgInteraction", false],
     ["BEST MITIGATION", "poiMitigation", false],
     ["BEST ENTRY LEVEL", "entryLevel", false],
     ["BEST BE LOGIC", "beLogic", false],
@@ -1660,7 +1684,8 @@ function renderResearchTradeRows(filtered) {
       : getTradeField(trade, "hasSmt") || "—";
     const support = getComparableValues(getTradeField(trade, "poiSupportType")).join(", ") || getTradeField(trade, "poiSupported") || "—";
     const entryLevel = getTradeField(trade, "entryLevel") || "—";
-    const pnl = Number(trade.pnl || 0);
+    const pnl = optionalNumber(trade.pnl);
+    const rr = optionalNumber(trade.rr);
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -1674,8 +1699,8 @@ function renderResearchTradeRows(filtered) {
       <td class="wrap-cell">${escapeHtml(support)}</td>
       <td class="wrap-cell">${escapeHtml(entryLevel)}</td>
       <td><span class="pill ${resultClass(trade.result)}">${escapeHtml(trade.result || "—")}</span></td>
-      <td>${Number(trade.rr || 0).toFixed(2)}R</td>
-      <td class="pnl-cell ${pnl < 0 ? "negative" : pnl > 0 ? "positive" : ""}">${escapeHtml(formatCurrency(pnl))}</td>
+      <td>${rr === null ? "—" : `${rr.toFixed(2)}R`}</td>
+      <td class="pnl-cell ${pnl !== null && pnl < 0 ? "negative" : pnl !== null && pnl > 0 ? "positive" : ""}">${escapeHtml(pnl === null ? "—" : formatCurrency(pnl))}</td>
       <td><div class="actions-cell">${tradeActionButtons(trade)}</div></td>
     `;
     elements.researchRows.appendChild(row);
@@ -1690,8 +1715,8 @@ function renderResearchTradeRows(filtered) {
       <div class="mobile-trade-metrics">
         <span><small>Direction</small>${escapeHtml(trade.direction || "—")}</span>
         <span><small>Entry</small>${escapeHtml(entryLevel)}</span>
-        <span><small>RR</small>${Number(trade.rr || 0).toFixed(2)}R</span>
-        <span><small>P/L</small><b class="${pnl < 0 ? "negative" : pnl > 0 ? "positive" : ""}">${escapeHtml(formatCurrency(pnl))}</b></span>
+        <span><small>RR</small>${rr === null ? "—" : `${rr.toFixed(2)}R`}</span>
+        <span><small>P/L</small><b class="${pnl !== null && pnl < 0 ? "negative" : pnl !== null && pnl > 0 ? "positive" : ""}">${escapeHtml(pnl === null ? "—" : formatCurrency(pnl))}</b></span>
       </div>
       <div class="mobile-trade-tags"><span>${escapeHtml(smt)}</span><span>${escapeHtml(support)}</span></div>
       <div class="actions-cell">${tradeActionButtons(trade)}</div>
@@ -1766,6 +1791,7 @@ function openTradeDetail(trade) {
         ${detailItem("POI Supported", getTradeField(trade, "poiSupported"))}
         ${detailItem("POI Support", getTradeField(trade, "poiSupportType"))}
         ${detailItem("Third Candle", getTradeField(trade, "thirdCandle"))}
+        ${detailItem("FVG Mitigation or Sweep", getTradeField(trade, "fvgInteraction"))}
         ${detailItem("Mitigation Behaviour", getTradeField(trade, "poiMitigation"))}
       </div>
     </section>
@@ -1776,9 +1802,9 @@ function openTradeDetail(trade) {
         ${detailItem("SL Pips", trade.slPips ?? trade.ltfAnalysis?.slPips)}
         ${detailItem("BE Logic", getTradeField(trade, "beLogic"))}
         ${detailItem("Outcome", trade.result)}
-        ${detailItem("Risk", formatCurrency(trade.riskAmount || 0))}
-        ${detailItem("RR", `${Number(trade.rr || 0).toFixed(2)}R`)}
-        ${detailItem("P/L", formatCurrency(trade.pnl || 0))}
+        ${detailItem("Risk", optionalNumber(trade.riskAmount) === null ? "" : formatCurrency(trade.riskAmount))}
+        ${detailItem("RR", optionalNumber(trade.rr) === null ? "" : `${Number(trade.rr).toFixed(2)}R`)}
+        ${detailItem("P/L", optionalNumber(trade.pnl) === null ? "" : formatCurrency(trade.pnl))}
       </div>
     </section>
     ${chartLinksMarkup("HTF Chart References", trade.htfAnalysis)}
@@ -1889,15 +1915,16 @@ function getCurrentWeekRange() {
 
 function updateStats(weeklyTrades = trades.filter((trade) => isDateInCurrentWeek(trade.date))) {
   const counted = weeklyTrades.filter((trade) => trade.status === "Took Trade");
-  const wins = counted.filter((trade) => trade.result === "TP").length;
-  const pnl = counted.reduce((total, trade) => total + Number(trade.pnl || 0), 0);
-  const rrTrades = counted.filter((trade) => Number.isFinite(Number(trade.rr)) && Number(trade.rr) > 0);
+  const completed = counted.filter((trade) => ["TP", "SL", "BE"].includes(trade.result));
+  const wins = completed.filter((trade) => trade.result === "TP").length;
+  const pnl = completed.reduce((total, trade) => total + Number(trade.pnl || 0), 0);
+  const rrTrades = completed.filter((trade) => Number.isFinite(Number(trade.rr)) && Number(trade.rr) > 0);
   const avgRr = rrTrades.length
     ? rrTrades.reduce((total, trade) => total + Number(trade.rr), 0) / rrTrades.length
     : 0;
 
   elements.weekPnl.textContent = formatCurrency(pnl);
-  elements.weekWinRate.textContent = counted.length ? `${((wins / counted.length) * 100).toFixed(1)}%` : "0.0%";
+  elements.weekWinRate.textContent = completed.length ? `${((wins / completed.length) * 100).toFixed(1)}%` : "0.0%";
   elements.weekTrades.textContent = String(counted.length);
   elements.weekAvgRr.textContent = `${avgRr.toFixed(2)}R`;
 }
@@ -1915,7 +1942,8 @@ function updateWeekRange() {
 function resultClass(result) {
   if (result === "TP") return "pill-tp";
   if (result === "SL") return "pill-sl";
-  return "pill-be";
+  if (result === "BE") return "pill-be";
+  return "pill-neutral";
 }
 
 function formatCurrency(value) {
@@ -1977,7 +2005,7 @@ function exportCsv() {
   const headers = [
     "date", "pair", "direction", "status", "entryAttempt", "fvgStatus", "fvgFormed",
     "hasSmt", "smtStrength", "smtPair", "poiSupported", "poiSupportType", "thirdCandle",
-    "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
+    "fvgInteraction", "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
@@ -1988,6 +2016,7 @@ function exportCsv() {
       poiSupported: trade.htfAnalysis?.poiSupported,
       poiSupportType: trade.htfAnalysis?.poiSupportType?.join(" | "),
       thirdCandle: trade.htfAnalysis?.thirdCandle,
+      fvgInteraction: trade.htfAnalysis?.fvgInteraction,
       poiMitigation: trade.htfAnalysis?.poiMitigation?.join(" | "),
       entryLevel: trade.ltfAnalysis?.entryLevel,
       beLogic: trade.ltfAnalysis?.beLogic

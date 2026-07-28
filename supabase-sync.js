@@ -182,10 +182,10 @@
       fvgStatus: row.fvg_status,
       fvgFormed: row.fvg_formed_day,
       result: row.result,
-      slPips: Number(row.sl_pips || 0),
-      riskAmount: Number(row.risk_amount || 0),
-      rr: Number(row.rr || 0),
-      pnl: Number(row.pnl || 0),
+      slPips: optionalNumber(row.sl_pips),
+      riskAmount: optionalNumber(row.risk_amount),
+      rr: optionalNumber(row.rr),
+      pnl: optionalNumber(row.pnl),
       htfAnalysis: {
         ...htfAnalysis,
         chartLinks: Array.isArray(row.htf_chart_links) ? row.htf_chart_links : [],
@@ -207,6 +207,12 @@
     };
   }
 
+  function optionalNumber(value) {
+    if (value === null || value === undefined || String(value).trim() === "") return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
   function tradeToRow(trade, userId, imagePaths = {}) {
     return {
       id: trade.id,
@@ -223,10 +229,10 @@
       fvg_status: trade.fvgStatus,
       fvg_formed_day: trade.fvgFormed,
       result: trade.result || null,
-      sl_pips: Number.isFinite(Number(trade.slPips)) ? Number(trade.slPips) : null,
-      risk_amount: Number.isFinite(Number(trade.riskAmount)) ? Number(trade.riskAmount) : null,
-      rr: Number.isFinite(Number(trade.rr)) ? Number(trade.rr) : null,
-      pnl: Number.isFinite(Number(trade.pnl)) ? Number(trade.pnl) : null,
+      sl_pips: optionalNumber(trade.slPips),
+      risk_amount: optionalNumber(trade.riskAmount),
+      rr: optionalNumber(trade.rr),
+      pnl: optionalNumber(trade.pnl),
       htf_analysis: cleanAnalysis(trade.htfAnalysis),
       ltf_analysis: cleanAnalysis(trade.ltfAnalysis),
       htf_chart_links: trade.htfAnalysis?.chartLinks || [],

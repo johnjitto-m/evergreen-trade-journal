@@ -8,7 +8,7 @@
   <title>Evergreen Trade Journal</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <div class="ambient ambient-left" aria-hidden="true"></div>
@@ -225,8 +225,12 @@
             <select id="filterThirdCandle" data-filter-key="thirdCandle"><option value="">Any Third Candle</option></select>
           </label>
           <label class="filter-field">
-            <span>Mitigation</span>
-            <select id="filterMitigation" data-filter-key="poiMitigation"><option value="">Any Mitigation</option></select>
+            <span>FVG Interaction</span>
+            <select id="filterFvgInteraction" data-filter-key="fvgInteraction"><option value="">Mitigation or Sweep</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Mitigation Behaviour</span>
+            <select id="filterMitigation" data-filter-key="poiMitigation"><option value="">Any Mitigation Behaviour</option></select>
           </label>
           <label class="filter-field">
             <span>Entry Level</span>
@@ -548,6 +552,24 @@
 
               <fieldset class="analysis-question-card">
                 <legend class="section-label">QUESTION 4</legend>
+                <p class="analysis-question">FVG mitigation or sweep?</p>
+                <div class="choice-grid choice-grid-2 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="fvgInteraction" value="Mitigation" required />
+                    <strong>Mitigation</strong>
+                    <small>The FVG is respected and mitigated.</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="fvgInteraction" value="Sweep" required />
+                    <strong>Sweep</strong>
+                    <small>Price sweeps through the FVG before the LTF entry.</small>
+                  </label>
+                </div>
+                <p class="analysis-hint">Selecting Sweep automatically selects Spartan CISD on the LTF page.</p>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 5</legend>
                 <p class="analysis-question">POI mitigation behaviour</p>
                 <p class="analysis-hint">Select all that apply. Added options stay available for future Evergreen trades.</p>
                 <div class="choice-grid choice-grid-2 compact-choices" id="poiMitigationOptions"></div>
@@ -607,7 +629,7 @@
                 <p class="analysis-question">How much is the SL pips?</p>
                 <label class="number-field">
                   <span>SL pips</span>
-                  <input id="slPips" name="slPips" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Example: 5.0" required />
+                  <input id="slPips" name="slPips" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Example: 5.0" />
                 </label>
               </fieldset>
 
@@ -616,15 +638,15 @@
                 <p class="analysis-question">What was the BE logic?</p>
                 <div class="choice-grid choice-grid-3 compact-choices">
                   <label class="choice-card">
-                    <input type="radio" name="beLogic" value="BE Level" required />
+                    <input type="radio" name="beLogic" value="BE Level" />
                     <strong>BE Level</strong>
                   </label>
                   <label class="choice-card">
-                    <input type="radio" name="beLogic" value="Counter FVG Mitigation" required />
+                    <input type="radio" name="beLogic" value="Counter FVG Mitigation" />
                     <strong>Counter FVG Mitigation</strong>
                   </label>
                   <label class="choice-card">
-                    <input type="radio" name="beLogic" value="ERL" required />
+                    <input type="radio" name="beLogic" value="ERL" />
                     <strong>ERL</strong>
                   </label>
                 </div>
@@ -635,17 +657,17 @@
                 <p class="analysis-question">Trade outcome</p>
                 <div class="choice-grid choice-grid-3 compact-choices">
                   <label class="choice-card">
-                    <input type="radio" name="result" value="BE" required />
+                    <input type="radio" name="result" value="BE" />
                     <strong>BE</strong>
                     <small>Break-even / no realised loss.</small>
                   </label>
                   <label class="choice-card">
-                    <input type="radio" name="result" value="SL" required />
+                    <input type="radio" name="result" value="SL" />
                     <strong>SL</strong>
                     <small>Stop loss hit.</small>
                   </label>
                   <label class="choice-card">
-                    <input type="radio" name="result" value="TP" required />
+                    <input type="radio" name="result" value="TP" />
                     <strong>TP</strong>
                     <small>Target profit hit.</small>
                   </label>
@@ -653,11 +675,11 @@
                 <div class="outcome-fields">
                   <label class="number-field">
                     <span>Risk $</span>
-                    <input id="riskAmount" name="riskAmount" type="number" min="0" step="0.01" inputmode="decimal" value="50" placeholder="50" required />
+                    <input id="riskAmount" name="riskAmount" type="number" min="0" step="0.01" inputmode="decimal" value="50" placeholder="50" />
                   </label>
                   <label class="number-field">
                     <span>RR</span>
-                    <input id="riskReward" name="riskReward" type="number" min="0" step="0.01" inputmode="decimal" placeholder="4" required />
+                    <input id="riskReward" name="riskReward" type="number" min="0" step="0.01" inputmode="decimal" placeholder="4" />
                   </label>
                   <div class="calculated-pnl">
                     <span>Calculated P/L</span>
@@ -726,8 +748,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=9"></script>
-  <script src="supabase-sync.js?v=9"></script>
-  <script src="app.js?v=9"></script>
+  <script src="supabase-config.js?v=10"></script>
+  <script src="supabase-sync.js?v=10"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
