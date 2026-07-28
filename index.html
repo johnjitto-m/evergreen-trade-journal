@@ -8,7 +8,7 @@
   <title>Evergreen Trade Journal</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=15" />
+  <link rel="stylesheet" href="styles.css?v=16" />
 </head>
 <body>
   <div class="ambient ambient-left" aria-hidden="true"></div>
@@ -239,6 +239,10 @@
           <label class="filter-field">
             <span>FVG Interaction</span>
             <select id="filterFvgInteraction" data-filter-key="fvgInteraction"><option value="">Mitigation or Sweep</option></select>
+          </label>
+          <label class="filter-field">
+            <span>POI Premium / Discount</span>
+            <select id="filterPoiZone" data-filter-key="poiZone"><option value="">Any POI Zone</option></select>
           </label>
           <label class="filter-field">
             <span>Clean HTF CISD</span>
@@ -590,6 +594,23 @@
 
               <fieldset class="analysis-question-card">
                 <legend class="section-label">QUESTION 5</legend>
+                <p class="analysis-question">Is this POI in premium or discount?</p>
+                <div class="choice-grid choice-grid-2 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="poiZone" value="Premium" required />
+                    <strong>Premium</strong>
+                    <small>The POI is located in the premium half of the dealing range.</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="poiZone" value="Discount" required />
+                    <strong>Discount</strong>
+                    <small>The POI is located in the discount half of the dealing range.</small>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 6</legend>
                 <p class="analysis-question">Does this POI have a clean HTF CISD?</p>
                 <div class="choice-grid choice-grid-2 compact-choices">
                   <label class="choice-card">
@@ -617,7 +638,7 @@
               </fieldset>
 
               <fieldset class="analysis-question-card">
-                <legend class="section-label">QUESTION 6</legend>
+                <legend class="section-label">QUESTION 7</legend>
                 <p class="analysis-question">POI mitigation behaviour</p>
                 <p class="analysis-hint">Select all that apply. Added options stay available for future Evergreen trades.</p>
                 <div class="choice-grid choice-grid-2 compact-choices" id="poiMitigationOptions"></div>
@@ -797,8 +818,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=15"></script>
-  <script src="supabase-sync.js?v=15"></script>
-  <script src="app.js?v=15"></script>
+  <script src="supabase-config.js?v=16"></script>
+  <script src="supabase-sync.js?v=16"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>

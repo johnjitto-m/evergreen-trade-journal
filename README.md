@@ -152,3 +152,8 @@ The dashboard action buttons now sit inside a normal table cell instead of turni
 
 The View action now opens a professional full-screen trade review dashboard. On desktop, Basic Information, HTF Analysis, LTF Execution, outcome metrics, and both chart-reference groups are visible together without vertical scrolling. Smaller screens automatically switch to a responsive scrollable layout.
 
+
+
+## POI premium / discount update (v16)
+
+The HTF Analysis step now records whether the selected POI is in **Premium** or **Discount**. The value is stored inside the existing `htf_analysis` JSON field, appears in full-screen Trade Review, research search and filters, strategy similarities, edge statistics, JSON backups, and CSV exports. No Supabase schema migration is required.

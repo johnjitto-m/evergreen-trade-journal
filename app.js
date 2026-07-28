@@ -768,6 +768,7 @@ function captureHtfForm() {
     poiSupportType: formData.getAll("poiSupportType"),
     thirdCandle: formData.get("thirdCandle") || "",
     fvgInteraction: formData.get("fvgInteraction") || "",
+    poiZone: formData.get("poiZone") || "",
     cleanHtfCisd: formData.get("cleanHtfCisd") || "",
     htfCisdLocation: formData.get("htfCisdLocation") || "",
     poiMitigation: formData.getAll("poiMitigation")
@@ -1430,7 +1431,7 @@ function updateChartPreview(type) {
 const RESEARCH_FILTER_KEYS = [
   "direction", "status", "pair", "result", "session", "htf", "entryAttempt", "fvgStatus",
   "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction",
-  "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"
+  "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"
 ];
 
 const INSIGHT_LABELS = {
@@ -1444,6 +1445,7 @@ const INSIGHT_LABELS = {
   poiSupportType: "POI support",
   thirdCandle: "Third candle",
   fvgInteraction: "FVG interaction",
+  poiZone: "POI premium / discount",
   cleanHtfCisd: "Clean HTF CISD",
   htfCisdLocation: "HTF CISD location",
   poiMitigation: "Mitigation behaviour",
@@ -1460,6 +1462,7 @@ function getTradeField(trade, key) {
     poiSupportType: trade.htfAnalysis?.poiSupportType,
     thirdCandle: trade.htfAnalysis?.thirdCandle,
     fvgInteraction: trade.htfAnalysis?.fvgInteraction,
+    poiZone: trade.htfAnalysis?.poiZone,
     cleanHtfCisd: trade.htfAnalysis?.cleanHtfCisd,
     htfCisdLocation: trade.htfAnalysis?.htfCisdLocation,
     poiMitigation: trade.htfAnalysis?.poiMitigation,
@@ -1518,6 +1521,7 @@ function tradeSearchText(trade) {
     ...getComparableValues(getTradeField(trade, "poiSupportType")),
     getTradeField(trade, "thirdCandle"),
     getTradeField(trade, "fvgInteraction"),
+    getTradeField(trade, "poiZone"),
     getTradeField(trade, "cleanHtfCisd"),
     getTradeField(trade, "htfCisdLocation"),
     ...getComparableValues(getTradeField(trade, "poiMitigation")),
@@ -1606,7 +1610,7 @@ function mostCommonInsight(subset, key) {
 }
 
 function renderSimilarityList(container, subset) {
-  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"];
+  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"];
   const insights = insightKeys.map((key) => mostCommonInsight(subset, key)).filter(Boolean).slice(0, 6);
   if (!insights.length) {
     container.innerHTML = '<p class="empty-insight">Not enough recorded trades for a similarity pattern.</p>';
@@ -1666,6 +1670,7 @@ function renderEdgeCards(filtered) {
     ["BEST SMT TYPE", "smtStrength", false],
     ["BEST POI SUPPORT", "poiSupportType", false],
     ["BEST FVG INTERACTION", "fvgInteraction", false],
+    ["BEST POI ZONE", "poiZone", false],
     ["BEST CLEAN HTF CISD", "cleanHtfCisd", false],
     ["BEST HTF CISD LOCATION", "htfCisdLocation", false],
     ["BEST MITIGATION", "poiMitigation", false],
@@ -1895,6 +1900,7 @@ function openTradeDetail(trade) {
             ${detailItem("POI Support", getTradeField(trade, "poiSupportType"))}
             ${detailItem("Third Candle", getTradeField(trade, "thirdCandle"))}
             ${detailItem("FVG Mitigation / Sweep", getTradeField(trade, "fvgInteraction"))}
+            ${detailItem("POI Premium / Discount", getTradeField(trade, "poiZone"))}
             ${detailItem("Clean HTF CISD", getTradeField(trade, "cleanHtfCisd"))}
             ${detailItem("HTF CISD Location", getTradeField(trade, "htfCisdLocation"))}
             ${detailItem("Mitigation Behaviour", getTradeField(trade, "poiMitigation"), "detail-item--wide")}
@@ -2146,7 +2152,7 @@ function exportCsv() {
   const headers = [
     "date", "pair", "direction", "status", "entryAttempt", "fvgStatus", "fvgFormed",
     "hasSmt", "smtStrength", "smtPair", "poiSupported", "poiSupportType", "thirdCandle",
-    "fvgInteraction", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
+    "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
@@ -2158,6 +2164,7 @@ function exportCsv() {
       poiSupportType: trade.htfAnalysis?.poiSupportType?.join(" | "),
       thirdCandle: trade.htfAnalysis?.thirdCandle,
       fvgInteraction: trade.htfAnalysis?.fvgInteraction,
+      poiZone: trade.htfAnalysis?.poiZone,
       cleanHtfCisd: trade.htfAnalysis?.cleanHtfCisd,
       htfCisdLocation: trade.htfAnalysis?.htfCisdLocation,
       poiMitigation: trade.htfAnalysis?.poiMitigation?.join(" | "),
