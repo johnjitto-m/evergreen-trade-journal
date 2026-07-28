@@ -8,7 +8,7 @@
   <title>Evergreen Trade Journal</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=11" />
 </head>
 <body>
   <div class="ambient ambient-left" aria-hidden="true"></div>
@@ -227,6 +227,14 @@
           <label class="filter-field">
             <span>FVG Interaction</span>
             <select id="filterFvgInteraction" data-filter-key="fvgInteraction"><option value="">Mitigation or Sweep</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Clean HTF CISD</span>
+            <select id="filterCleanHtfCisd" data-filter-key="cleanHtfCisd"><option value="">Any HTF CISD</option></select>
+          </label>
+          <label class="filter-field">
+            <span>HTF CISD Location</span>
+            <select id="filterHtfCisdLocation" data-filter-key="htfCisdLocation"><option value="">Any CISD Location</option></select>
           </label>
           <label class="filter-field">
             <span>Mitigation Behaviour</span>
@@ -570,6 +578,34 @@
 
               <fieldset class="analysis-question-card">
                 <legend class="section-label">QUESTION 5</legend>
+                <p class="analysis-question">Does this POI have a clean HTF CISD?</p>
+                <div class="choice-grid choice-grid-2 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="cleanHtfCisd" value="Yes" required />
+                    <strong>Yes</strong>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="cleanHtfCisd" value="No" required />
+                    <strong>No</strong>
+                  </label>
+                </div>
+                <div class="conditional-panel" id="cleanHtfCisdDetails" hidden>
+                  <p class="conditional-title">Where is the clean HTF CISD?</p>
+                  <div class="choice-grid choice-grid-2 compact-choices">
+                    <label class="choice-card">
+                      <input type="radio" name="htfCisdLocation" value="CISD Inside FVG" />
+                      <strong>CISD Inside FVG</strong>
+                    </label>
+                    <label class="choice-card">
+                      <input type="radio" name="htfCisdLocation" value="CISD Outside FVG" />
+                      <strong>CISD Outside FVG</strong>
+                    </label>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 6</legend>
                 <p class="analysis-question">POI mitigation behaviour</p>
                 <p class="analysis-hint">Select all that apply. Added options stay available for future Evergreen trades.</p>
                 <div class="choice-grid choice-grid-2 compact-choices" id="poiMitigationOptions"></div>
@@ -748,8 +784,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=10"></script>
-  <script src="supabase-sync.js?v=10"></script>
-  <script src="app.js?v=10"></script>
+  <script src="supabase-config.js?v=11"></script>
+  <script src="supabase-sync.js?v=11"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

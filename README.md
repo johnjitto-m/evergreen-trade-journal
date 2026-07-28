@@ -7,6 +7,7 @@ A static HTML/CSS/JavaScript trading journal with an isolated Supabase backend. 
 - Responsive Evergreen dashboard and full research database
 - Basic Info → HTF Analysis → LTF Analysis trade workflow
 - HTF “FVG mitigation or sweep?” tracking; Sweep auto-selects Spartan CISD on LTF
+- Clean HTF CISD question with conditional Inside FVG / Outside FVG selection
 - LTF answers are optional, so incomplete trades can be saved and completed later through Edit
 - TradingView snapshot previews and separate HTF/LTF reference links
 - Default HTF **1H**, automatic LTF **5m**, and editable **$50** risk
@@ -111,7 +112,7 @@ From the project folder:
 
 ```bash
 git add .
-git commit -m "Add FVG sweep workflow and partial trade saving"
+git commit -m "Add clean HTF CISD question"
 git push
 ```
 

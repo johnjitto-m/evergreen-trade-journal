@@ -123,6 +123,7 @@ const elements = {
   smtPairText: document.querySelector("#smtPairText"),
   smtDetails: document.querySelector("#smtDetails"),
   poiSupportDetails: document.querySelector("#poiSupportDetails"),
+  cleanHtfCisdDetails: document.querySelector("#cleanHtfCisdDetails"),
   poiMitigationOptions: document.querySelector("#poiMitigationOptions"),
   entryLevelOptions: document.querySelector("#entryLevelOptions"),
   addPoiMitigationOptionBtn: document.querySelector("#addPoiMitigationOptionBtn"),
@@ -766,6 +767,8 @@ function captureHtfForm() {
     poiSupportType: formData.getAll("poiSupportType"),
     thirdCandle: formData.get("thirdCandle") || "",
     fvgInteraction: formData.get("fvgInteraction") || "",
+    cleanHtfCisd: formData.get("cleanHtfCisd") || "",
+    htfCisdLocation: formData.get("htfCisdLocation") || "",
     poiMitigation: formData.getAll("poiMitigation")
   };
   applySweepEntryDefault();
@@ -858,6 +861,14 @@ function updateConditionalPanels() {
       input.checked = false;
     });
   }
+
+  const cleanHtfCisd = elements.htfForm.querySelector('input[name="cleanHtfCisd"]:checked')?.value;
+  elements.cleanHtfCisdDetails.hidden = cleanHtfCisd !== "Yes";
+  if (cleanHtfCisd !== "Yes") {
+    elements.htfForm.querySelectorAll('input[name="htfCisdLocation"]').forEach((input) => {
+      input.checked = false;
+    });
+  }
   syncChoiceCards();
 }
 
@@ -892,6 +903,10 @@ function handleHtfSubmit(event) {
   }
   if (currentDraft.htf.poiSupported === "Yes" && !currentDraft.htf.poiSupportType.length) {
     elements.htfMessage.textContent = "Select Previous FVG, Previous OB, or both.";
+    return;
+  }
+  if (currentDraft.htf.cleanHtfCisd === "Yes" && !currentDraft.htf.htfCisdLocation) {
+    elements.htfMessage.textContent = "Select CISD Inside FVG or CISD Outside FVG.";
     return;
   }
   if (!currentDraft.htf.poiMitigation.length) {
@@ -1401,8 +1416,8 @@ function updateChartPreview(type) {
 
 const RESEARCH_FILTER_KEYS = [
   "direction", "status", "pair", "result", "session", "htf", "entryAttempt", "fvgStatus",
-  "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiMitigation",
-  "entryLevel", "beLogic"
+  "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction",
+  "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"
 ];
 
 const INSIGHT_LABELS = {
@@ -1416,6 +1431,8 @@ const INSIGHT_LABELS = {
   poiSupportType: "POI support",
   thirdCandle: "Third candle",
   fvgInteraction: "FVG interaction",
+  cleanHtfCisd: "Clean HTF CISD",
+  htfCisdLocation: "HTF CISD location",
   poiMitigation: "Mitigation behaviour",
   entryLevel: "Entry level",
   beLogic: "BE logic"
@@ -1430,6 +1447,8 @@ function getTradeField(trade, key) {
     poiSupportType: trade.htfAnalysis?.poiSupportType,
     thirdCandle: trade.htfAnalysis?.thirdCandle,
     fvgInteraction: trade.htfAnalysis?.fvgInteraction,
+    cleanHtfCisd: trade.htfAnalysis?.cleanHtfCisd,
+    htfCisdLocation: trade.htfAnalysis?.htfCisdLocation,
     poiMitigation: trade.htfAnalysis?.poiMitigation,
     entryLevel: trade.ltfAnalysis?.entryLevel,
     beLogic: trade.ltfAnalysis?.beLogic
@@ -1486,6 +1505,8 @@ function tradeSearchText(trade) {
     ...getComparableValues(getTradeField(trade, "poiSupportType")),
     getTradeField(trade, "thirdCandle"),
     getTradeField(trade, "fvgInteraction"),
+    getTradeField(trade, "cleanHtfCisd"),
+    getTradeField(trade, "htfCisdLocation"),
     ...getComparableValues(getTradeField(trade, "poiMitigation")),
     getTradeField(trade, "entryLevel"), getTradeField(trade, "beLogic")
   ];
@@ -1571,7 +1592,7 @@ function mostCommonInsight(subset, key) {
 }
 
 function renderSimilarityList(container, subset) {
-  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiMitigation", "entryLevel", "beLogic"];
+  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"];
   const insights = insightKeys.map((key) => mostCommonInsight(subset, key)).filter(Boolean).slice(0, 6);
   if (!insights.length) {
     container.innerHTML = '<p class="empty-insight">Not enough recorded trades for a similarity pattern.</p>';
@@ -1631,6 +1652,8 @@ function renderEdgeCards(filtered) {
     ["BEST SMT TYPE", "smtStrength", false],
     ["BEST POI SUPPORT", "poiSupportType", false],
     ["BEST FVG INTERACTION", "fvgInteraction", false],
+    ["BEST CLEAN HTF CISD", "cleanHtfCisd", false],
+    ["BEST HTF CISD LOCATION", "htfCisdLocation", false],
     ["BEST MITIGATION", "poiMitigation", false],
     ["BEST ENTRY LEVEL", "entryLevel", false],
     ["BEST BE LOGIC", "beLogic", false],
@@ -1792,6 +1815,8 @@ function openTradeDetail(trade) {
         ${detailItem("POI Support", getTradeField(trade, "poiSupportType"))}
         ${detailItem("Third Candle", getTradeField(trade, "thirdCandle"))}
         ${detailItem("FVG Mitigation or Sweep", getTradeField(trade, "fvgInteraction"))}
+        ${detailItem("Clean HTF CISD", getTradeField(trade, "cleanHtfCisd"))}
+        ${detailItem("HTF CISD Location", getTradeField(trade, "htfCisdLocation"))}
         ${detailItem("Mitigation Behaviour", getTradeField(trade, "poiMitigation"))}
       </div>
     </section>
@@ -2005,7 +2030,7 @@ function exportCsv() {
   const headers = [
     "date", "pair", "direction", "status", "entryAttempt", "fvgStatus", "fvgFormed",
     "hasSmt", "smtStrength", "smtPair", "poiSupported", "poiSupportType", "thirdCandle",
-    "fvgInteraction", "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
+    "fvgInteraction", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
@@ -2017,6 +2042,8 @@ function exportCsv() {
       poiSupportType: trade.htfAnalysis?.poiSupportType?.join(" | "),
       thirdCandle: trade.htfAnalysis?.thirdCandle,
       fvgInteraction: trade.htfAnalysis?.fvgInteraction,
+      cleanHtfCisd: trade.htfAnalysis?.cleanHtfCisd,
+      htfCisdLocation: trade.htfAnalysis?.htfCisdLocation,
       poiMitigation: trade.htfAnalysis?.poiMitigation?.join(" | "),
       entryLevel: trade.ltfAnalysis?.entryLevel,
       beLogic: trade.ltfAnalysis?.beLogic
