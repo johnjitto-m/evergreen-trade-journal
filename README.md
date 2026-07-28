@@ -138,3 +138,7 @@ Secret key
 service_role key
 JWT secret
 ```
+
+## Entry-level multi-select update
+
+The LTF question **Which entry level was used?** now supports selecting multiple entry levels. Existing trades that stored one entry level remain compatible. If HTF FVG interaction is set to **Sweep**, **Spartan CISD** is automatically added without removing any other selected entry level.

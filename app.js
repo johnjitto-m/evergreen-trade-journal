@@ -571,6 +571,7 @@ function normaliseDraft(draft) {
     ltf: {
       ...empty.ltf,
       ...(draft.ltf || {}),
+      entryLevel: normaliseEntryLevels(draft.ltf?.entryLevel),
       riskAmount: draft.ltf?.riskAmount === "" || draft.ltf?.riskAmount == null
         ? DEFAULT_RISK_AMOUNT
         : String(draft.ltf.riskAmount),
@@ -775,10 +776,19 @@ function captureHtfForm() {
   return currentDraft.htf;
 }
 
+function normaliseEntryLevels(value) {
+  if (Array.isArray(value)) return uniqueValues(value.map((item) => String(item).trim()).filter(Boolean));
+  if (value === undefined || value === null || String(value).trim() === "") return [];
+  return [String(value).trim()];
+}
+
 function applySweepEntryDefault() {
   if (currentDraft.htf?.fvgInteraction !== "Sweep") return;
   if (!currentDraft.ltf) currentDraft.ltf = {};
-  currentDraft.ltf.entryLevel = "Spartan CISD";
+  currentDraft.ltf.entryLevel = uniqueValues([
+    ...normaliseEntryLevels(currentDraft.ltf.entryLevel),
+    "Spartan CISD"
+  ]);
 
   const spartanOption = elements.ltfForm.querySelector(
     'input[name="entryLevel"][value="Spartan CISD"]'
@@ -791,7 +801,7 @@ function captureLtfForm() {
   const formData = new FormData(elements.ltfForm);
   currentDraft.ltf = {
     ...currentDraft.ltf,
-    entryLevel: formData.get("entryLevel") || "",
+    entryLevel: formData.getAll("entryLevel"),
     slPips: formData.get("slPips") || "",
     beLogic: formData.get("beLogic") || "",
     result: formData.get("result") || "",
@@ -1016,8 +1026,8 @@ function renderDynamicOptions() {
     container: elements.entryLevelOptions,
     values: optionLibrary.entryLevel,
     name: "entryLevel",
-    type: "radio",
-    selected: currentDraft.ltf?.entryLevel ? [currentDraft.ltf.entryLevel] : []
+    type: "checkbox",
+    selected: normaliseEntryLevels(currentDraft.ltf?.entryLevel)
   });
   syncChoiceCards();
 }
@@ -1065,7 +1075,10 @@ async function addCustomOption(category) {
   if (category === "poiMitigation") {
     currentDraft.htf.poiMitigation = uniqueValues([...(currentDraft.htf.poiMitigation || []), value]);
   } else {
-    currentDraft.ltf.entryLevel = value;
+    currentDraft.ltf.entryLevel = uniqueValues([
+      ...normaliseEntryLevels(currentDraft.ltf.entryLevel),
+      value
+    ]);
   }
   renderDynamicOptions();
   saveDraft();
@@ -1508,7 +1521,8 @@ function tradeSearchText(trade) {
     getTradeField(trade, "cleanHtfCisd"),
     getTradeField(trade, "htfCisdLocation"),
     ...getComparableValues(getTradeField(trade, "poiMitigation")),
-    getTradeField(trade, "entryLevel"), getTradeField(trade, "beLogic")
+    ...getComparableValues(getTradeField(trade, "entryLevel")),
+    getTradeField(trade, "beLogic")
   ];
   return values.filter(Boolean).join(" ").toLowerCase();
 }
@@ -1706,7 +1720,7 @@ function renderResearchTradeRows(filtered) {
       ? getTradeField(trade, "smtStrength") || "Yes"
       : getTradeField(trade, "hasSmt") || "—";
     const support = getComparableValues(getTradeField(trade, "poiSupportType")).join(", ") || getTradeField(trade, "poiSupported") || "—";
-    const entryLevel = getTradeField(trade, "entryLevel") || "—";
+    const entryLevel = getComparableValues(getTradeField(trade, "entryLevel")).join(", ") || "—";
     const pnl = optionalNumber(trade.pnl);
     const rr = optionalNumber(trade.rr);
 
@@ -1873,7 +1887,13 @@ function editTrade(trade) {
 
 function renderTrades() {
   elements.rows.innerHTML = "";
-  const weeklyTrades = trades.filter((trade) => isDateInCurrentWeek(trade.date));
+  const weeklyTrades = trades
+    .filter((trade) => isDateInCurrentWeek(trade.date))
+    .sort((a, b) => {
+      const dateA = new Date(`${a.date}T12:00:00`);
+      const dateB = new Date(`${b.date}T12:00:00`);
+      return dateA - dateB || String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+    });
 
   if (!weeklyTrades.length) {
     const row = document.createElement("tr");
@@ -2045,7 +2065,7 @@ function exportCsv() {
       cleanHtfCisd: trade.htfAnalysis?.cleanHtfCisd,
       htfCisdLocation: trade.htfAnalysis?.htfCisdLocation,
       poiMitigation: trade.htfAnalysis?.poiMitigation?.join(" | "),
-      entryLevel: trade.ltfAnalysis?.entryLevel,
+      entryLevel: getComparableValues(trade.ltfAnalysis?.entryLevel).join(" | "),
       beLogic: trade.ltfAnalysis?.beLogic
     };
     return headers.map((key) => csvCell(flat[key])).join(",");
