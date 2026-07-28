@@ -2081,6 +2081,11 @@ select {
   }
 }
 
+/* ================================================================
+   Full-screen professional trade review
+   Desktop uses the complete viewport and keeps all trade fields visible.
+   Smaller screens fall back to a clean scrollable layout.
+   ================================================================ */
 .weekly-trades-table {
   width: 100%;
   table-layout: fixed;
@@ -2096,3 +2101,403 @@ select {
   max-width: 100%;
   justify-content: flex-start;
 }
+
+.detail-backdrop {
+  padding: 12px;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(18, 201, 113, 0.08), transparent 30%),
+    rgba(1, 7, 18, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.trade-detail-modal {
+  display: flex;
+  flex-direction: column;
+  width: calc(100vw - 24px);
+  height: calc(100dvh - 24px);
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+  border: 1px solid rgba(65, 95, 130, 0.48);
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(12, 25, 43, 0.995), rgba(4, 13, 27, 0.995));
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.62);
+}
+
+.trade-detail-modal .detail-header {
+  flex: 0 0 auto;
+  min-height: 66px;
+  padding: 11px 18px;
+  background: linear-gradient(90deg, rgba(17, 34, 55, 0.96), rgba(7, 20, 36, 0.96));
+}
+
+.trade-detail-modal .detail-header .eyebrow {
+  margin-bottom: 2px;
+  letter-spacing: 0.16em;
+}
+
+.trade-detail-modal .detail-header h2 {
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+}
+
+.trade-detail-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.trade-review-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+.trade-review-summary {
+  display: grid;
+  grid-template-columns: minmax(340px, 1.25fr) minmax(560px, 1.75fr);
+  gap: 12px;
+  min-height: 76px;
+  padding: 10px 12px;
+  border: 1px solid rgba(43, 211, 128, 0.3);
+  border-radius: 14px;
+  background:
+    linear-gradient(100deg, rgba(9, 57, 48, 0.48), rgba(11, 28, 49, 0.8));
+}
+
+.trade-review-identity {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.trade-review-symbol {
+  display: grid;
+  place-items: center;
+  min-width: 88px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 1px solid rgba(43, 211, 128, 0.42);
+  border-radius: 12px;
+  background: rgba(6, 40, 36, 0.76);
+  color: #75f1b4;
+  font-size: clamp(1.05rem, 1.6vw, 1.45rem);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+.trade-review-identity p {
+  margin: 0 0 7px;
+  color: #b8c7da;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.trade-review-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.trade-review-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.trade-review-metric {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(74, 96, 127, 0.28);
+  border-radius: 11px;
+  background: rgba(18, 33, 54, 0.68);
+}
+
+.trade-review-metric span {
+  color: #8296af;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.trade-review-metric strong {
+  color: #f4f7fb;
+  font-size: clamp(0.86rem, 1.15vw, 1.06rem);
+  overflow-wrap: anywhere;
+}
+
+.trade-review-metric.is-positive strong,
+.detail-item.is-positive strong {
+  color: #67e6a6;
+}
+
+.trade-review-metric.is-negative strong,
+.detail-item.is-negative strong {
+  color: #ff9ca4;
+}
+
+.trade-review-columns {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.92fr) minmax(430px, 1.28fr) minmax(280px, 0.92fr);
+  gap: 10px;
+  min-height: 0;
+}
+
+.trade-review-columns .detail-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 11px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(155deg, rgba(11, 25, 43, 0.9), rgba(7, 18, 33, 0.8));
+}
+
+.detail-section--basic {
+  border-top: 2px solid rgba(93, 167, 255, 0.72);
+}
+
+.detail-section--htf {
+  border-top: 2px solid rgba(46, 218, 134, 0.8);
+}
+
+.detail-section--ltf {
+  border-top: 2px solid rgba(178, 128, 255, 0.74);
+}
+
+.detail-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.detail-section-heading p {
+  margin: 0;
+  color: #56dca0;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+}
+
+.detail-section-heading h3 {
+  margin: 0;
+  font-size: clamp(0.9rem, 1vw, 1rem);
+}
+
+.trade-review-columns .detail-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 7px;
+}
+
+.detail-grid--basic,
+.detail-grid--htf,
+.detail-grid--ltf {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trade-review-columns .detail-item {
+  align-content: center;
+  min-height: 0;
+  padding: 7px 8px;
+  gap: 3px;
+  border-radius: 9px;
+  background: rgba(23, 38, 60, 0.68);
+}
+
+.trade-review-columns .detail-item--wide {
+  grid-column: 1 / -1;
+}
+
+.trade-review-columns .detail-item span {
+  font-size: clamp(0.55rem, 0.62vw, 0.65rem);
+  letter-spacing: 0.045em;
+}
+
+.trade-review-columns .detail-item strong {
+  font-size: clamp(0.72rem, 0.78vw, 0.86rem);
+  line-height: 1.2;
+}
+
+.trade-review-references {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 92px;
+}
+
+.detail-reference-panel {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(73, 96, 127, 0.34);
+  border-radius: 13px;
+  background: rgba(9, 21, 38, 0.84);
+}
+
+.detail-reference-panel--htf {
+  box-shadow: inset 3px 0 0 rgba(46, 218, 134, 0.7);
+}
+
+.detail-reference-panel--ltf {
+  box-shadow: inset 3px 0 0 rgba(178, 128, 255, 0.68);
+}
+
+.detail-reference-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.detail-reference-heading p {
+  margin: 0 0 2px;
+  color: #55dda0;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+}
+
+.detail-reference-heading h3 {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.detail-reference-heading > span {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: #9fb0c5;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.detail-reference-list {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.detail-reference-link {
+  display: grid;
+  flex: 0 1 220px;
+  min-width: 130px;
+  min-height: 46px;
+  padding: 7px 9px;
+  border: 1px solid rgba(74, 99, 132, 0.42);
+  border-radius: 9px;
+  background: rgba(20, 36, 58, 0.82);
+  color: #eef5fb;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.detail-reference-link span {
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-reference-link small {
+  color: #7fdcaf;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.detail-reference-empty {
+  margin: 0;
+  color: #8294aa;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 1180px), (max-height: 820px) {
+  .trade-detail-content {
+    overflow-y: auto;
+  }
+
+  .trade-review-shell {
+    height: auto;
+  }
+
+  .trade-review-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .trade-review-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .detail-section--ltf {
+    grid-column: 1 / -1;
+  }
+
+  .trade-review-columns .detail-section {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 760px) {
+  .detail-backdrop {
+    padding: 4px;
+  }
+
+  .trade-detail-modal {
+    width: calc(100vw - 8px);
+    height: calc(100dvh - 8px);
+    border-radius: 14px;
+  }
+
+  .trade-detail-modal .detail-header {
+    min-height: 58px;
+    padding: 9px 12px;
+  }
+
+  .trade-detail-content {
+    padding: 7px;
+  }
+
+  .trade-review-summary,
+  .trade-review-columns,
+  .trade-review-references {
+    grid-template-columns: 1fr;
+  }
+
+  .trade-review-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detail-grid--basic,
+  .detail-grid--htf,
+  .detail-grid--ltf {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-reference-panel {
+    grid-template-columns: 1fr;
+  }
+}
+

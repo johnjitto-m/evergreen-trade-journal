@@ -8,7 +8,7 @@
   <title>Evergreen Trade Journal</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=14" />
+  <link rel="stylesheet" href="styles.css?v=15" />
 </head>
 <body>
   <div class="ambient ambient-left" aria-hidden="true"></div>
@@ -79,38 +79,36 @@
       </div>
 
       <div class="table-wrap" role="region" aria-label="Weekly trades" tabindex="0">
-  <table class="weekly-trades-table">
-    <colgroup>
-      <col style="width: 4%">
-      <col style="width: 11%">
-      <col style="width: 9%">
-      <col style="width: 10%">
-      <col style="width: 12%">
-      <col style="width: 7%">
-      <col style="width: 11%">
-      <col style="width: 13%">
-      <col style="width: 9%">
-      <col style="width: 14%">
-    </colgroup>
-
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Date</th>
-        <th>Pair</th>
-        <th>Direction</th>
-        <th>Status</th>
-        <th>Entry</th>
-        <th>Setup</th>
-        <th>FVG Formed</th>
-        <th>Result</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-
-    <tbody id="tradeRows"></tbody>
-  </table>
-</div>
+        <table class="weekly-trades-table">
+          <colgroup>
+            <col style="width: 4%" />
+            <col style="width: 11%" />
+            <col style="width: 9%" />
+            <col style="width: 10%" />
+            <col style="width: 12%" />
+            <col style="width: 7%" />
+            <col style="width: 11%" />
+            <col style="width: 13%" />
+            <col style="width: 9%" />
+            <col style="width: 14%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Pair</th>
+              <th>Direction</th>
+              <th>Status</th>
+              <th>Entry</th>
+              <th>Setup</th>
+              <th>FVG Formed</th>
+              <th>Result</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tradeRows"></tbody>
+        </table>
+      </div>
     </section>
     </div>
 
@@ -799,8 +797,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=14"></script>
-  <script src="supabase-sync.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="supabase-config.js?v=15"></script>
+  <script src="supabase-sync.js?v=15"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

@@ -147,3 +147,8 @@ The LTF question **Which entry level was used?** now supports selecting multiple
 ## Weekly table alignment fix
 
 The dashboard action buttons now sit inside a normal table cell instead of turning the table cell itself into a flex container. This keeps the Actions header aligned and lets the weekly table use the full available width without a large dead area on the right.
+
+## Full-screen trade review (v15)
+
+The View action now opens a professional full-screen trade review dashboard. On desktop, Basic Information, HTF Analysis, LTF Execution, outcome metrics, and both chart-reference groups are visible together without vertical scrolling. Smaller screens automatically switch to a responsive scrollable layout.
+

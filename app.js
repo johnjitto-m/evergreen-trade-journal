@@ -1782,72 +1782,147 @@ function clearResearchFilters() {
   renderResearchView();
 }
 
-function detailItem(label, value) {
+function detailItem(label, value, extraClass = "") {
   const values = getComparableValues(value);
   const display = values.length ? values.join(", ") : "Not recorded";
-  return `<div class="detail-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(display)}</strong></div>`;
+  return `<div class="detail-item ${escapeAttribute(extraClass)}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(display)}</strong></div>`;
 }
 
-function chartLinksMarkup(title, analysis) {
+function chartLinksMarkup(title, analysis, tone = "htf") {
   const links = (analysis?.chartLinks || []).filter((item) => item.url);
-  if (!links.length && !analysis?.uploadedImage?.dataUrl) return "";
-  const linkMarkup = links.map((item) => {
+  const hasScreenshot = Boolean(analysis?.uploadedImage?.dataUrl);
+  const count = links.length + (hasScreenshot ? 1 : 0);
+
+  const linkMarkup = links.map((item, index) => {
     const safeUrl = /^https?:\/\//i.test(item.url) ? item.url : "";
-    return safeUrl ? `<a href="${escapeAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.label || "Open chart")}</a>` : "";
+    if (!safeUrl) return "";
+    return `<a class="detail-reference-link" href="${escapeAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">
+      <span>${escapeHtml(item.label || `${title} ${index + 1}`)}</span>
+      <small>Open chart ↗</small>
+    </a>`;
   }).join("");
-  const imageMarkup = analysis?.uploadedImage?.dataUrl
-    ? `<button class="detail-chart-preview" type="button" data-preview-image="${escapeAttribute(analysis.uploadedImage.dataUrl)}">Preview uploaded screenshot</button>`
+
+  const imageMarkup = hasScreenshot
+    ? `<button class="detail-reference-link detail-chart-preview" type="button" data-preview-image="${escapeAttribute(analysis.uploadedImage.dataUrl)}">
+        <span>${escapeHtml(analysis.uploadedImage.name || `${title} screenshot`)}</span>
+        <small>Preview image</small>
+      </button>`
     : "";
-  return `<section class="detail-section"><h3>${escapeHtml(title)}</h3><div class="detail-link-list">${linkMarkup}${imageMarkup}</div></section>`;
+
+  const emptyMarkup = !count
+    ? `<p class="detail-reference-empty">No ${escapeHtml(title.toLowerCase())} saved.</p>`
+    : "";
+
+  return `<section class="detail-reference-panel detail-reference-panel--${escapeAttribute(tone)}">
+    <div class="detail-reference-heading">
+      <div>
+        <p>${escapeHtml(tone.toUpperCase())} CHARTS</p>
+        <h3>${escapeHtml(title)}</h3>
+      </div>
+      <span>${count} reference${count === 1 ? "" : "s"}</span>
+    </div>
+    <div class="detail-reference-list">${linkMarkup}${imageMarkup}${emptyMarkup}</div>
+  </section>`;
+}
+
+function reviewMetric(label, value, modifier = "") {
+  const display = value === null || value === undefined || value === "" ? "—" : String(value);
+  return `<div class="trade-review-metric ${escapeAttribute(modifier)}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(display)}</strong></div>`;
 }
 
 function openTradeDetail(trade) {
   const { dateText, dayText } = formatTradeDate(trade);
+  const rrNumber = optionalNumber(trade.rr);
+  const pnlNumber = optionalNumber(trade.pnl);
+  const riskNumber = optionalNumber(trade.riskAmount);
+  const resultText = trade.result || "Pending";
+  const pnlText = pnlNumber === null ? "—" : formatCurrency(pnlNumber);
+  const pnlTone = pnlNumber === null ? "" : pnlNumber > 0 ? "is-positive" : pnlNumber < 0 ? "is-negative" : "";
+  const resultTone = trade.result ? resultClass(trade.result) : "pill-neutral";
+
   elements.tradeDetailTitle.textContent = `${trade.pair || "Trade"} · ${dateText}`;
   elements.tradeDetailContent.innerHTML = `
-    <section class="detail-section">
-      <h3>Basic Information</h3>
-      <div class="detail-grid">
-        ${detailItem("Date", `${dateText} · ${dayText}`)}
-        ${detailItem("Pair", trade.pair)}
-        ${detailItem("Direction", trade.direction)}
-        ${detailItem("Session", trade.session)}
-        ${detailItem("HTF / LTF", `${trade.htf || "—"} / ${trade.ltf || "—"}`)}
-        ${detailItem("Status", trade.status)}
-        ${detailItem("Entry Attempt", trade.entryAttempt)}
-        ${detailItem("FVG Status", trade.fvgStatus)}
-        ${detailItem("FVG Formed", trade.fvgFormed)}
+    <div class="trade-review-shell">
+      <section class="trade-review-summary" aria-label="Trade summary">
+        <div class="trade-review-identity">
+          <div class="trade-review-symbol">${escapeHtml(trade.pair || "—")}</div>
+          <div>
+            <p>${escapeHtml(dateText)} · ${escapeHtml(dayText)}</p>
+            <div class="trade-review-badges">
+              <span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction || "—")}</span>
+              <span class="pill pill-status">${escapeHtml(trade.status || "—")}</span>
+              <span class="pill ${resultTone}">${escapeHtml(resultText)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="trade-review-metrics">
+          ${reviewMetric("P/L", pnlText, pnlTone)}
+          ${reviewMetric("RR", rrNumber === null ? "—" : `${rrNumber.toFixed(2)}R`)}
+          ${reviewMetric("Risk", riskNumber === null ? "—" : formatCurrency(riskNumber))}
+          ${reviewMetric("Timeframes", `${trade.htf || "—"} / ${trade.ltf || "—"}`)}
+        </div>
+      </section>
+
+      <div class="trade-review-columns">
+        <section class="detail-section detail-section--basic">
+          <div class="detail-section-heading">
+            <p>01 · SETUP</p>
+            <h3>Basic Information</h3>
+          </div>
+          <div class="detail-grid detail-grid--basic">
+            ${detailItem("Date", `${dateText} · ${dayText}`)}
+            ${detailItem("Pair", trade.pair)}
+            ${detailItem("Direction", trade.direction)}
+            ${detailItem("Session", trade.session)}
+            ${detailItem("HTF / LTF", `${trade.htf || "—"} / ${trade.ltf || "—"}`)}
+            ${detailItem("Status", trade.status)}
+            ${detailItem("Entry Attempt", trade.entryAttempt)}
+            ${detailItem("FVG Status", trade.fvgStatus)}
+            ${detailItem("FVG Formed", trade.fvgFormed)}
+          </div>
+        </section>
+
+        <section class="detail-section detail-section--htf">
+          <div class="detail-section-heading">
+            <p>02 · CONTEXT</p>
+            <h3>HTF Analysis</h3>
+          </div>
+          <div class="detail-grid detail-grid--htf">
+            ${detailItem("SMT", getTradeField(trade, "hasSmt"))}
+            ${detailItem("SMT Strength", getTradeField(trade, "smtStrength"))}
+            ${detailItem("SMT Pair", getTradeField(trade, "smtPair"), "detail-item--wide")}
+            ${detailItem("POI Supported", getTradeField(trade, "poiSupported"))}
+            ${detailItem("POI Support", getTradeField(trade, "poiSupportType"))}
+            ${detailItem("Third Candle", getTradeField(trade, "thirdCandle"))}
+            ${detailItem("FVG Mitigation / Sweep", getTradeField(trade, "fvgInteraction"))}
+            ${detailItem("Clean HTF CISD", getTradeField(trade, "cleanHtfCisd"))}
+            ${detailItem("HTF CISD Location", getTradeField(trade, "htfCisdLocation"))}
+            ${detailItem("Mitigation Behaviour", getTradeField(trade, "poiMitigation"), "detail-item--wide")}
+          </div>
+        </section>
+
+        <section class="detail-section detail-section--ltf">
+          <div class="detail-section-heading">
+            <p>03 · EXECUTION</p>
+            <h3>LTF Execution</h3>
+          </div>
+          <div class="detail-grid detail-grid--ltf">
+            ${detailItem("Entry Level", getTradeField(trade, "entryLevel"), "detail-item--wide")}
+            ${detailItem("SL Pips", trade.slPips ?? trade.ltfAnalysis?.slPips)}
+            ${detailItem("BE Logic", getTradeField(trade, "beLogic"))}
+            ${detailItem("Outcome", trade.result)}
+            ${detailItem("Risk", riskNumber === null ? "" : formatCurrency(riskNumber))}
+            ${detailItem("RR", rrNumber === null ? "" : `${rrNumber.toFixed(2)}R`)}
+            ${detailItem("P/L", pnlNumber === null ? "" : formatCurrency(pnlNumber), pnlTone)}
+          </div>
+        </section>
       </div>
-    </section>
-    <section class="detail-section">
-      <h3>HTF Analysis</h3>
-      <div class="detail-grid">
-        ${detailItem("SMT", getTradeField(trade, "hasSmt"))}
-        ${detailItem("SMT Strength", getTradeField(trade, "smtStrength"))}
-        ${detailItem("SMT Pair", getTradeField(trade, "smtPair"))}
-        ${detailItem("POI Supported", getTradeField(trade, "poiSupported"))}
-        ${detailItem("POI Support", getTradeField(trade, "poiSupportType"))}
-        ${detailItem("Third Candle", getTradeField(trade, "thirdCandle"))}
-        ${detailItem("FVG Mitigation or Sweep", getTradeField(trade, "fvgInteraction"))}
-        ${detailItem("Clean HTF CISD", getTradeField(trade, "cleanHtfCisd"))}
-        ${detailItem("HTF CISD Location", getTradeField(trade, "htfCisdLocation"))}
-        ${detailItem("Mitigation Behaviour", getTradeField(trade, "poiMitigation"))}
+
+      <div class="trade-review-references">
+        ${chartLinksMarkup("HTF Chart References", trade.htfAnalysis, "htf")}
+        ${chartLinksMarkup("LTF Chart References", trade.ltfAnalysis, "ltf")}
       </div>
-    </section>
-    <section class="detail-section">
-      <h3>LTF Execution</h3>
-      <div class="detail-grid">
-        ${detailItem("Entry Level", getTradeField(trade, "entryLevel"))}
-        ${detailItem("SL Pips", trade.slPips ?? trade.ltfAnalysis?.slPips)}
-        ${detailItem("BE Logic", getTradeField(trade, "beLogic"))}
-        ${detailItem("Outcome", trade.result)}
-        ${detailItem("Risk", optionalNumber(trade.riskAmount) === null ? "" : formatCurrency(trade.riskAmount))}
-        ${detailItem("RR", optionalNumber(trade.rr) === null ? "" : `${Number(trade.rr).toFixed(2)}R`)}
-        ${detailItem("P/L", optionalNumber(trade.pnl) === null ? "" : formatCurrency(trade.pnl))}
-      </div>
-    </section>
-    ${chartLinksMarkup("HTF Chart References", trade.htfAnalysis)}
-    ${chartLinksMarkup("LTF Chart References", trade.ltfAnalysis)}
+    </div>
   `;
   elements.tradeDetailModal.hidden = false;
   document.body.classList.add("modal-open");
