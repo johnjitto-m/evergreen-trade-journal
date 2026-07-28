@@ -5,6 +5,7 @@ A static HTML/CSS/JavaScript trading journal with an isolated Supabase backend. 
 ## Current build
 
 - Responsive Evergreen dashboard and full research database
+- Weekly dashboard ordered Monday to Sunday, with newly added trades placed at the bottom of their day
 - Basic Info → HTF Analysis → LTF Analysis trade workflow
 - HTF “FVG mitigation or sweep?” tracking; Sweep auto-selects Spartan CISD on LTF
 - Clean HTF CISD question with conditional Inside FVG / Outside FVG selection

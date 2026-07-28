@@ -1885,15 +1885,34 @@ function editTrade(trade) {
   openModal();
 }
 
+function getDashboardSortTime(value) {
+  const parsed = Date.parse(value || "");
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function compareWeeklyDashboardTrades(a, b) {
+  // Monday stays at the top and Sunday stays at the bottom because the
+  // dashboard is limited to the current Monday-to-Sunday week.
+  const dateA = new Date(`${a.date}T12:00:00`).getTime();
+  const dateB = new Date(`${b.date}T12:00:00`).getTime();
+  const dateDifference = dateA - dateB;
+
+  if (dateDifference !== 0) return dateDifference;
+
+  // For multiple trades on the same day, older entries remain above newer
+  // entries. A newly saved trade therefore appears at the bottom of that day.
+  const createdDifference = getDashboardSortTime(a.createdAt) - getDashboardSortTime(b.createdAt);
+  if (createdDifference !== 0) return createdDifference;
+
+  // Stable fallback for older imported records that do not have createdAt.
+  return String(a.id || "").localeCompare(String(b.id || ""));
+}
+
 function renderTrades() {
   elements.rows.innerHTML = "";
   const weeklyTrades = trades
     .filter((trade) => isDateInCurrentWeek(trade.date))
-    .sort((a, b) => {
-      const dateA = new Date(`${a.date}T12:00:00`);
-      const dateB = new Date(`${b.date}T12:00:00`);
-      return dateA - dateB || String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
-    });
+    .sort(compareWeeklyDashboardTrades);
 
   if (!weeklyTrades.length) {
     const row = document.createElement("tr");
