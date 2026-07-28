@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07111f" />
+  <meta name="description" content="Evergreen Trade Journal dashboard and trade setup research journal." />
+  <title>Evergreen Trade Journal</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css?v=8" />
+</head>
+<body>
+  <div class="ambient ambient-left" aria-hidden="true"></div>
+  <div class="ambient ambient-right" aria-hidden="true"></div>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">EVERGREEN SETUP RESEARCH JOURNAL</p>
+        <h1>Evergreen Trade Journal</h1>
+        <p class="subtitle">Track Evergreen trade setups and find the pattern behind wins, losses, and missed opportunities.</p>
+      </div>
+
+      <div class="header-actions" aria-label="Journal tools">
+        <button class="btn btn-secondary" id="backupBtn" type="button">Backup JSON</button>
+        <button class="btn btn-secondary" id="exportBtn" type="button">Export CSV</button>
+        <button class="btn btn-secondary" id="importBtn" type="button">Import JSON</button>
+        <button class="btn btn-secondary" id="installBtn" type="button">Install App</button>
+        <input id="importFile" type="file" accept="application/json" hidden />
+      </div>
+    </header>
+
+    <section class="sync-panel panel" aria-label="Cloud sync status">
+      <div class="sync-copy">
+        <span class="eyebrow">CLOUD SYNC</span>
+        <strong>Supabase Ready</strong>
+        <span class="muted">Not connected yet</span>
+        <span class="sync-note">Evergreen data uses its own namespace and tables.</span>
+      </div>
+      <button class="btn btn-secondary" type="button" id="connectBtn">Connect Later</button>
+    </section>
+
+    <div class="page-view" id="dashboardView">
+    <section class="stats-grid" aria-label="Weekly statistics">
+      <article class="stat-card panel">
+        <p>THIS WEEK P/L</p>
+        <strong id="weekPnl">$0.00</strong>
+      </article>
+      <article class="stat-card panel">
+        <p>THIS WEEK WIN RATE</p>
+        <strong id="weekWinRate">0.0%</strong>
+      </article>
+      <article class="stat-card panel">
+        <p>THIS WEEK TRADES</p>
+        <strong id="weekTrades">0</strong>
+      </article>
+      <article class="stat-card panel">
+        <p>THIS WEEK AVG RR</p>
+        <strong id="weekAvgRr">0.00R</strong>
+      </article>
+    </section>
+
+    <section class="journal-panel panel">
+      <div class="journal-heading">
+        <div>
+          <p class="eyebrow">WEEKLY JOURNAL</p>
+          <h2>This Week's Trades</h2>
+          <p class="muted" id="weekRange">Monday to Sunday</p>
+        </div>
+        <div class="journal-actions">
+          <button class="btn btn-primary" id="addTradeBtn" type="button">+ Add Trade</button>
+          <button class="btn btn-secondary" id="viewAllBtn" type="button">View All Trades / Research Journal</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" role="region" aria-label="Weekly trades" tabindex="0">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Pair</th>
+              <th>Direction</th>
+              <th>Status</th>
+              <th>Entry</th>
+              <th>Setup</th>
+              <th>FVG Formed</th>
+              <th>Result</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tradeRows"></tbody>
+        </table>
+      </div>
+    </section>
+    </div>
+
+    <section class="page-view research-view" id="researchView" hidden aria-labelledby="researchTitle">
+      <section class="research-header panel">
+        <div>
+          <p class="eyebrow">TRADE RESEARCH</p>
+          <h2 id="researchTitle">All Trades Database</h2>
+          <p class="muted">Filter every Evergreen setup, compare outcomes, and identify the conditions behind your edge.</p>
+        </div>
+        <div class="research-header-actions">
+          <button class="btn btn-primary" id="addTradeResearchBtn" type="button">+ Add Trade</button>
+          <button class="btn btn-secondary" id="backToDashboardBtn" type="button">Back to Dashboard</button>
+        </div>
+      </section>
+
+      <section class="research-stats" aria-label="Filtered trade statistics">
+        <article class="research-stat panel">
+          <p>FILTERED P/L</p>
+          <strong id="filteredPnl">$0.00</strong>
+        </article>
+        <article class="research-stat panel">
+          <p>FILTERED WIN RATE</p>
+          <strong id="filteredWinRate">0.0%</strong>
+        </article>
+        <article class="research-stat panel">
+          <p>FILTERED TRADES</p>
+          <strong id="filteredTrades">0</strong>
+        </article>
+        <article class="research-stat panel">
+          <p>FILTERED AVG RR</p>
+          <strong id="filteredAvgRr">0.00R</strong>
+        </article>
+      </section>
+
+      <section class="edge-panel panel">
+        <div class="section-heading-row">
+          <div>
+            <p class="eyebrow">FILTERED EDGE SNAPSHOT</p>
+            <h2>Strategy Similarities</h2>
+          </div>
+          <span class="results-badge" id="researchResultCount">0 results</span>
+        </div>
+        <div class="similarity-grid">
+          <article class="similarity-card positive-card">
+            <p class="insight-kicker">WINNING TRADE SIMILARITIES</p>
+            <h3 id="winningTradeCount">0 TP trades</h3>
+            <div class="similarity-list" id="winningSimilarities"></div>
+          </article>
+          <article class="similarity-card negative-card">
+            <p class="insight-kicker">LOSING TRADE SIMILARITIES</p>
+            <h3 id="losingTradeCount">0 SL trades</h3>
+            <div class="similarity-list" id="losingSimilarities"></div>
+          </article>
+        </div>
+        <div class="edge-card-grid" id="edgeCards"></div>
+      </section>
+
+      <section class="database-panel panel">
+        <div class="section-heading-row database-heading">
+          <div>
+            <p class="eyebrow">DATABASE</p>
+            <h2>All Trade Data</h2>
+          </div>
+          <div class="filter-status">
+            <span id="activeFilterCount">No active filters</span>
+            <button class="btn btn-secondary btn-compact" id="clearFiltersBtn" type="button">Clear Filters</button>
+          </div>
+        </div>
+
+        <div class="filter-grid" id="filterGrid">
+          <label class="filter-field filter-search">
+            <span>Search</span>
+            <input id="filterSearch" type="search" placeholder="Pair, setup, SMT, entry, notes..." autocomplete="off" />
+          </label>
+          <label class="filter-field">
+            <span>Direction</span>
+            <select id="filterDirection" data-filter-key="direction"><option value="">All Directions</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Status</span>
+            <select id="filterStatus" data-filter-key="status"><option value="">All Statuses</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Pair</span>
+            <select id="filterPair" data-filter-key="pair"><option value="">All Pairs</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Result</span>
+            <select id="filterResult" data-filter-key="result"><option value="">All Results</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Session</span>
+            <select id="filterSession" data-filter-key="session"><option value="">All Sessions</option></select>
+          </label>
+          <label class="filter-field">
+            <span>HTF</span>
+            <select id="filterHtf" data-filter-key="htf"><option value="">All HTFs</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Entry Attempt</span>
+            <select id="filterEntryAttempt" data-filter-key="entryAttempt"><option value="">All Entries</option></select>
+          </label>
+          <label class="filter-field">
+            <span>FVG Status</span>
+            <select id="filterFvgStatus" data-filter-key="fvgStatus"><option value="">All FVG Statuses</option></select>
+          </label>
+          <label class="filter-field">
+            <span>FVG Formed</span>
+            <select id="filterFvgFormed" data-filter-key="fvgFormed"><option value="">Any Formation Day</option></select>
+          </label>
+          <label class="filter-field">
+            <span>SMT</span>
+            <select id="filterHasSmt" data-filter-key="hasSmt"><option value="">Any SMT</option></select>
+          </label>
+          <label class="filter-field">
+            <span>SMT Strength</span>
+            <select id="filterSmtStrength" data-filter-key="smtStrength"><option value="">Any SMT Strength</option></select>
+          </label>
+          <label class="filter-field">
+            <span>POI Support</span>
+            <select id="filterPoiSupport" data-filter-key="poiSupportType"><option value="">Any POI Support</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Third Candle</span>
+            <select id="filterThirdCandle" data-filter-key="thirdCandle"><option value="">Any Third Candle</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Mitigation</span>
+            <select id="filterMitigation" data-filter-key="poiMitigation"><option value="">Any Mitigation</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Entry Level</span>
+            <select id="filterEntryLevel" data-filter-key="entryLevel"><option value="">Any Entry Level</option></select>
+          </label>
+          <label class="filter-field">
+            <span>BE Logic</span>
+            <select id="filterBeLogic" data-filter-key="beLogic"><option value="">Any BE Logic</option></select>
+          </label>
+          <label class="filter-field">
+            <span>From</span>
+            <input id="filterDateFrom" type="date" />
+          </label>
+          <label class="filter-field">
+            <span>To</span>
+            <input id="filterDateTo" type="date" />
+          </label>
+          <label class="filter-field">
+            <span>Sort</span>
+            <select id="filterSort">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="pnl-high">Highest P/L</option>
+              <option value="pnl-low">Lowest P/L</option>
+              <option value="rr-high">Highest RR</option>
+              <option value="rr-low">Lowest RR</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="research-table-wrap" role="region" aria-label="Filtered Evergreen trades" tabindex="0">
+          <table class="research-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Pair</th>
+                <th>Direction</th>
+                <th>Status</th>
+                <th>Entry</th>
+                <th>SMT</th>
+                <th>POI Support</th>
+                <th>Entry Level</th>
+                <th>Result</th>
+                <th>RR</th>
+                <th>P/L</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="researchTradeRows"></tbody>
+          </table>
+        </div>
+        <div class="mobile-trade-list" id="researchMobileList"></div>
+      </section>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="tradeModal" hidden>
+    <section class="trade-modal" id="tradeModalPanel" role="dialog" aria-modal="true" aria-labelledby="tradeModalTitle">
+      <div class="modal-topline">
+        <div>
+          <p class="eyebrow" id="modalEyebrow">NEW TRADE</p>
+          <h2 id="tradeModalTitle">Step 1 — Basic Info</h2>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="clearFormBtn" type="button">Clear</button>
+          <button class="icon-btn" id="closeModalBtn" type="button" aria-label="Close add trade form">×</button>
+        </div>
+      </div>
+
+      <div class="step-tabs" id="stepTabs" aria-label="Trade entry steps">
+        <button class="step-tab active" data-step-target="basic" type="button">1 Basic</button>
+        <button class="step-tab" data-step-target="htf" type="button" disabled>2 HTF Analysis</button>
+        <button class="step-tab" data-step-target="ltf" type="button" disabled>3 LTF Analysis</button>
+      </div>
+
+      <section class="wizard-step" id="basicStep" data-step="basic">
+        <form id="basicTradeForm" novalidate>
+          <section class="form-section">
+            <p class="section-label">BASIC DETAILS</p>
+            <div class="form-grid basic-grid">
+              <label>
+                <span>Date</span>
+                <input id="tradeDate" name="date" type="date" required />
+              </label>
+              <label>
+                <span>Day</span>
+                <input id="tradeDay" name="day" type="text" readonly />
+              </label>
+              <label>
+                <span>Pair</span>
+                <select id="tradePair" name="pair" required>
+                  <option value="EURUSD">EURUSD</option>
+                  <option value="GBPUSD">GBPUSD</option>
+                  <option value="XAUUSD">XAUUSD</option>
+                  <option value="USDJPY">USDJPY</option>
+                  <option value="GBPJPY">GBPJPY</option>
+                  <option value="NAS100">NAS100</option>
+                </select>
+              </label>
+              <label>
+                <span>Direction</span>
+                <select id="tradeDirection" name="direction" required>
+                  <option value="Long">Long</option>
+                  <option value="Short">Short</option>
+                </select>
+              </label>
+              <label>
+                <span>Session</span>
+                <select id="tradeSession" name="session" required>
+                  <option value="London">London</option>
+                  <option value="New York">New York</option>
+                  <option value="Asia">Asia</option>
+                  <option value="London + New York">London + New York</option>
+                </select>
+              </label>
+              <label class="timeframe-field">
+                <span>HTF</span>
+                <select id="tradeHtf" name="htf" required>
+                  <option value="5m">5m</option>
+                  <option value="15m">15m</option>
+                  <option value="30m">30m</option>
+                  <option value="1h" selected>1H</option>
+                  <option value="4h">4h</option>
+                </select>
+              </label>
+              <label class="timeframe-field auto-field">
+                <span>Auto LTF</span>
+                <input id="tradeLtf" name="ltf" type="text" value="5m" readonly />
+              </label>
+            </div>
+          </section>
+
+          <div class="question-grid">
+            <fieldset class="choice-section">
+              <legend class="section-label">TRADE STATUS</legend>
+              <p class="question">Did you take this setup?</p>
+              <div class="choice-grid choice-grid-3" data-choice-group="status">
+                <label class="choice-card selected">
+                  <input type="radio" name="status" value="Took Trade" checked />
+                  <strong>Took Trade</strong>
+                  <small>Counts in P/L, win rate and RR.</small>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="status" value="Missed Trade" />
+                  <strong>Missed Trade</strong>
+                  <small>Saved for review, not counted in stats.</small>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="status" value="Not Taken" />
+                  <strong>Not Taken</strong>
+                  <small>Skipped setup, not counted in stats.</small>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-section">
+              <legend class="section-label">ENTRY ATTEMPT</legend>
+              <p class="question">Which entry is this?</p>
+              <div class="choice-grid choice-grid-2" data-choice-group="entryAttempt">
+                <label class="choice-card selected">
+                  <input type="radio" name="entryAttempt" value="1st Entry" checked />
+                  <strong>1st Entry</strong>
+                  <small>First valid entry.</small>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="entryAttempt" value="2nd Entry" />
+                  <strong>2nd Entry</strong>
+                  <small>Second valid entry.</small>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-section">
+              <legend class="section-label">FVG STATUS</legend>
+              <p class="question">Is this FVG new or partial?</p>
+              <div class="choice-grid choice-grid-2" data-choice-group="fvgStatus">
+                <label class="choice-card selected">
+                  <input type="radio" name="fvgStatus" value="Fresh FVG" checked />
+                  <strong>Fresh FVG</strong>
+                  <small>New imbalance area.</small>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="fvgStatus" value="Partial FVG" />
+                  <strong>Partial FVG</strong>
+                  <small>Partially used or revisited FVG.</small>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-section">
+              <legend class="section-label">FVG FORMATION DAY</legend>
+              <p class="question">When was the FVG formed?</p>
+              <div class="choice-grid choice-grid-2" data-choice-group="fvgFormed">
+                <label class="choice-card selected">
+                  <input type="radio" name="fvgFormed" value="Today" checked />
+                  <strong>Today</strong>
+                  <small>The FVG formed during today's trading day.</small>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="fvgFormed" value="Previous Day" />
+                  <strong>Previous Day</strong>
+                  <small>The setup uses an FVG formed on the previous day.</small>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="form-footer">
+            <button class="btn btn-primary btn-large" type="submit">Continue to HTF Analysis</button>
+            <p class="form-message" id="basicFormMessage" role="status"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="wizard-step analysis-step" id="htfStep" data-step="htf" hidden>
+        <form id="htfAnalysisForm" novalidate>
+          <div class="analysis-layout">
+            <aside class="chart-column" aria-label="HTF chart references">
+              <div class="chart-column-heading">
+                <div>
+                  <p class="section-label">CHART REFERENCES</p>
+                  <h3>HTF Charts</h3>
+                </div>
+              </div>
+
+              <div class="chart-dropzone" id="htfDropZone">
+                <img class="dropzone-preview" id="htfDropPreview" alt="Active HTF chart preview" referrerpolicy="no-referrer" hidden />
+                <p>Paste TradingView snapshot links, image URLs, or upload an HTF screenshot</p>
+              </div>
+
+              <div class="chart-links-heading">
+                <h3>TradingView / Image Links</h3>
+                <button class="btn btn-secondary btn-compact" id="addHtfLinkBtn" type="button">+ Add Link</button>
+              </div>
+              <div class="chart-link-list" id="htfChartLinks"></div>
+
+              <label class="btn btn-primary upload-button">
+                Upload HTF Screenshot Fallback
+                <input id="htfUploadInput" type="file" accept="image/*" hidden />
+              </label>
+              <p class="chart-help">Use TradingView camera icon → Copy link to chart image. Add multiple references for before mitigation and current mitigation.</p>
+              <button class="btn btn-secondary active-snapshot-button" id="openActiveHtfPreviewBtn" type="button" hidden>Open Active HTF Snapshot</button>
+            </aside>
+
+            <div class="analysis-questions" id="htfQuestions">
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 1</legend>
+                <p class="analysis-question">Does it have SMT?</p>
+                <div class="choice-grid choice-grid-2 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="hasSmt" value="Yes" required />
+                    <strong>Yes</strong>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="hasSmt" value="No" required />
+                    <strong>No</strong>
+                  </label>
+                </div>
+                <div class="conditional-panel" id="smtDetails" hidden>
+                  <p class="conditional-title">SMT comparison: <strong id="smtPairText">EURUSD vs GBPUSD</strong></p>
+                  <div class="choice-grid choice-grid-2 compact-choices">
+                    <label class="choice-card">
+                      <input type="radio" name="smtStrength" value="Weak SMT" />
+                      <strong>Weak SMT</strong>
+                    </label>
+                    <label class="choice-card">
+                      <input type="radio" name="smtStrength" value="Strong SMT" />
+                      <strong>Strong SMT</strong>
+                    </label>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 2</legend>
+                <p class="analysis-question">Is this POI supported by anything?</p>
+                <div class="choice-grid choice-grid-2 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="poiSupported" value="Yes" required />
+                    <strong>Yes</strong>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="poiSupported" value="No" required />
+                    <strong>No</strong>
+                  </label>
+                </div>
+                <div class="conditional-panel" id="poiSupportDetails" hidden>
+                  <p class="conditional-title">Select all support that applies.</p>
+                  <div class="choice-grid choice-grid-2 compact-choices">
+                    <label class="choice-card checkbox-card">
+                      <input type="checkbox" name="poiSupportType" value="Previous FVG" />
+                      <strong>Previous FVG</strong>
+                    </label>
+                    <label class="choice-card checkbox-card">
+                      <input type="checkbox" name="poiSupportType" value="Previous OB" />
+                      <strong>Previous OB</strong>
+                    </label>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 3</legend>
+                <p class="analysis-question">FVG created third candle is?</p>
+                <div class="choice-grid choice-grid-2 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="thirdCandle" value="Positive" required />
+                    <strong>Positive</strong>
+                    <small>The third candle is bullish / positive.</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="thirdCandle" value="Negative" required />
+                    <strong>Negative</strong>
+                    <small>The third candle is bearish / negative.</small>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 4</legend>
+                <p class="analysis-question">POI mitigation behaviour</p>
+                <p class="analysis-hint">Select all that apply. Added options stay available for future Evergreen trades.</p>
+                <div class="choice-grid choice-grid-2 compact-choices" id="poiMitigationOptions"></div>
+                <button class="btn btn-secondary add-option-button" id="addPoiMitigationOptionBtn" type="button">+ Add More Option</button>
+              </fieldset>
+
+              <div class="analysis-footer">
+                <button class="btn btn-secondary btn-large" id="backToBasicBtn" type="button">Back to Basic Info</button>
+                <button class="btn btn-primary btn-large" type="submit">Continue to LTF Analysis</button>
+                <p class="form-message" id="htfFormMessage" role="status"></p>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="wizard-step analysis-step" id="ltfStep" data-step="ltf" hidden>
+        <form id="ltfAnalysisForm" novalidate>
+          <div class="analysis-layout">
+            <aside class="chart-column" aria-label="LTF chart references">
+              <div class="chart-column-heading">
+                <div>
+                  <p class="section-label">CHART REFERENCES</p>
+                  <h3>LTF Charts</h3>
+                </div>
+              </div>
+
+              <div class="chart-dropzone" id="ltfDropZone">
+                <img class="dropzone-preview" id="ltfDropPreview" alt="Active LTF chart preview" referrerpolicy="no-referrer" hidden />
+                <p>Paste TradingView snapshot links, image URLs, or upload an LTF screenshot</p>
+              </div>
+
+              <div class="chart-links-heading">
+                <h3>TradingView / Image Links</h3>
+                <button class="btn btn-secondary btn-compact" id="addLtfLinkBtn" type="button">+ Add Link</button>
+              </div>
+              <div class="chart-link-list" id="ltfChartLinks"></div>
+
+              <label class="btn btn-primary upload-button">
+                Upload LTF Screenshot Fallback
+                <input id="ltfUploadInput" type="file" accept="image/*" hidden />
+              </label>
+              <p class="chart-help">Add the CISD setup, mitigation, and SL / BE / TP references as separate chart links.</p>
+              <button class="btn btn-secondary active-snapshot-button" id="openActiveLtfPreviewBtn" type="button" hidden>Open Active LTF Snapshot</button>
+            </aside>
+
+            <div class="analysis-questions" id="ltfQuestions">
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 1</legend>
+                <p class="analysis-question">Which entry level was used?</p>
+                <div class="choice-grid choice-grid-2 compact-choices" id="entryLevelOptions"></div>
+                <button class="btn btn-secondary add-option-button" id="addEntryLevelOptionBtn" type="button">+ Add Option</button>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 2</legend>
+                <p class="analysis-question">How much is the SL pips?</p>
+                <label class="number-field">
+                  <span>SL pips</span>
+                  <input id="slPips" name="slPips" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Example: 5.0" required />
+                </label>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 3</legend>
+                <p class="analysis-question">What was the BE logic?</p>
+                <div class="choice-grid choice-grid-3 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="beLogic" value="BE Level" required />
+                    <strong>BE Level</strong>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="beLogic" value="Counter FVG Mitigation" required />
+                    <strong>Counter FVG Mitigation</strong>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="beLogic" value="ERL" required />
+                    <strong>ERL</strong>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 4</legend>
+                <p class="analysis-question">Trade outcome</p>
+                <div class="choice-grid choice-grid-3 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="result" value="BE" required />
+                    <strong>BE</strong>
+                    <small>Break-even / no realised loss.</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="result" value="SL" required />
+                    <strong>SL</strong>
+                    <small>Stop loss hit.</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="result" value="TP" required />
+                    <strong>TP</strong>
+                    <small>Target profit hit.</small>
+                  </label>
+                </div>
+                <div class="outcome-fields">
+                  <label class="number-field">
+                    <span>Risk $</span>
+                    <input id="riskAmount" name="riskAmount" type="number" min="0" step="0.01" inputmode="decimal" value="50" placeholder="50" required />
+                  </label>
+                  <label class="number-field">
+                    <span>RR</span>
+                    <input id="riskReward" name="riskReward" type="number" min="0" step="0.01" inputmode="decimal" placeholder="4" required />
+                  </label>
+                  <div class="calculated-pnl">
+                    <span>Calculated P/L</span>
+                    <strong id="calculatedPnl">$0.00</strong>
+                  </div>
+                </div>
+              </fieldset>
+
+              <div class="analysis-footer">
+                <button class="btn btn-secondary btn-large" id="backToHtfBtn" type="button">Back to HTF Analysis</button>
+                <button class="btn btn-primary btn-large" type="submit">Save Trade</button>
+                <p class="form-message" id="ltfFormMessage" role="status"></p>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+    </section>
+  </div>
+
+  <div class="modal-backdrop detail-backdrop" id="tradeDetailModal" hidden>
+    <section class="trade-detail-modal" role="dialog" aria-modal="true" aria-labelledby="tradeDetailTitle">
+      <div class="detail-header">
+        <div>
+          <p class="eyebrow">TRADE REVIEW</p>
+          <h2 id="tradeDetailTitle">Evergreen Trade Details</h2>
+        </div>
+        <button class="icon-btn" id="closeTradeDetailBtn" type="button" aria-label="Close trade details">×</button>
+      </div>
+      <div class="trade-detail-content" id="tradeDetailContent"></div>
+    </section>
+  </div>
+
+  <div class="image-preview-modal" id="imagePreviewModal" hidden>
+    <button class="icon-btn preview-close" id="closeImagePreviewBtn" type="button" aria-label="Close image preview">×</button>
+    <div class="image-preview-content">
+      <img id="previewImage" alt="Trading chart preview" hidden />
+      <p class="preview-status" id="previewStatus" role="status">Loading chart preview…</p>
+      <a class="btn btn-secondary preview-open-original" id="previewOpenOriginal" href="#" target="_blank" rel="noopener noreferrer">Open original link</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js?v=8"></script>
+</body>
+</html>
