@@ -157,3 +157,8 @@ The View action now opens a professional full-screen trade review dashboard. On 
 ## POI premium / discount update (v16)
 
 The HTF Analysis step now records whether the selected POI is in **Premium** or **Discount**. The value is stored inside the existing `htf_analysis` JSON field, appears in full-screen Trade Review, research search and filters, strategy similarities, edge statistics, JSON backups, and CSV exports. No Supabase schema migration is required.
+
+
+## v17 — Add-trade-style trade review
+
+The View Trade screen now mirrors the Add Trade visual language in one full-screen, read-only page. Basic details, HTF questions, LTF questions, selected answers, chart previews, and links are visible without scrolling on normal desktop displays. Smaller screens fall back to a responsive scrollable layout.
