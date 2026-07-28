@@ -143,3 +143,7 @@ JWT secret
 ## Entry-level multi-select update
 
 The LTF question **Which entry level was used?** now supports selecting multiple entry levels. Existing trades that stored one entry level remain compatible. If HTF FVG interaction is set to **Sweep**, **Spartan CISD** is automatically added without removing any other selected entry level.
+
+## Weekly table alignment fix
+
+The dashboard action buttons now sit inside a normal table cell instead of turning the table cell itself into a flex container. This keeps the Actions header aligned and lets the weekly table use the full available width without a large dead area on the right.

@@ -1944,10 +1944,12 @@ function renderTrades() {
       <td>${escapeHtml(trade.fvgStatus)}</td>
       <td>${escapeHtml(trade.fvgFormed)}</td>
       <td><span class="pill ${resultClass(trade.result)}">${escapeHtml(trade.result || "—")}</span></td>
-      <td class="actions-cell">
-        <button class="action-btn" type="button" data-action="view" data-id="${trade.id}">View</button>
-        <button class="action-btn" type="button" data-action="edit" data-id="${trade.id}">Edit</button>
-        <button class="action-btn delete" type="button" data-action="delete" data-id="${trade.id}">Delete</button>
+      <td>
+        <div class="actions-cell">
+          <button class="action-btn" type="button" data-action="view" data-id="${trade.id}">View</button>
+          <button class="action-btn" type="button" data-action="edit" data-id="${trade.id}">Edit</button>
+          <button class="action-btn delete" type="button" data-action="delete" data-id="${trade.id}">Delete</button>
+        </div>
       </td>
     `;
     elements.rows.appendChild(row);
