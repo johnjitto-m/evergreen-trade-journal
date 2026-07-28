@@ -149,3 +149,27 @@ using (
   bucket_id = 'evergreen-trade-images'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
+
+-- Data API permissions for the browser client. RLS policies above still restrict
+-- every authenticated user to their own Evergreen rows.
+revoke all on table public.evergreen_trades from anon;
+revoke all on table public.evergreen_journal_options from anon;
+grant select, insert, update, delete on table public.evergreen_trades to authenticated;
+grant select, insert, update, delete on table public.evergreen_journal_options to authenticated;
+
+-- Keep updated_at accurate for changes made through Supabase.
+create or replace function public.set_evergreen_updated_at()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists evergreen_trades_set_updated_at on public.evergreen_trades;
+create trigger evergreen_trades_set_updated_at
+before update on public.evergreen_trades
+for each row execute function public.set_evergreen_updated_at();

@@ -1999,3 +1999,78 @@ select {
 .choice-section {
   overflow: visible;
 }
+
+/* Supabase cloud sync */
+.sync-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sync-user {
+  color: #d9f8e7;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.sync-panel.is-error {
+  border-color: rgba(255, 92, 101, 0.38);
+}
+
+.sync-panel.is-connected {
+  border-color: rgba(31, 211, 119, 0.32);
+}
+
+.auth-backdrop {
+  z-index: 80;
+}
+
+.auth-modal {
+  width: min(520px, 100%);
+  overflow: hidden;
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.auth-form input {
+  width: 100%;
+  min-height: 48px;
+}
+
+.auth-form .btn {
+  width: 100%;
+}
+
+.auth-security-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+  .sync-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .sync-actions .btn {
+    flex: 1 1 160px;
+  }
+}

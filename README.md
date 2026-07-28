@@ -1,131 +1,137 @@
 # Evergreen Trade Journal
 
-A vanilla HTML/CSS/JavaScript web app that keeps the Evergreen setup journal separate from the old trading journal.
+A static HTML/CSS/JavaScript trading journal with an isolated Supabase backend. It can run locally through VS Code Live Server and deploy directly to GitHub Pages.
 
-## Built in this version
+## Current build
 
-### Dashboard
-
-- Evergreen Trade Journal homepage matching the old journal style
-- Current-week P/L, win rate, trade count, and average RR
-- Weekly trade table with View, Edit, and Delete actions
-- Consistent card heights, aligned controls, wrapped long labels, and responsive spacing
+- Responsive Evergreen dashboard and full research database
+- Basic Info → HTF Analysis → LTF Analysis trade workflow
+- TradingView snapshot previews and separate HTF/LTF reference links
+- Default HTF **1H**, automatic LTF **5m**, and editable **$50** risk
 - JSON backup/import and CSV export
-- Installable PWA files
+- Email magic-link sign-in through Supabase Auth
+- Cloud trade Create, Read, Update, and Delete
+- Cloud custom-option syncing
+- Private Supabase Storage uploads for HTF/LTF screenshots
+- Local-first saving: a trade remains in browser storage if cloud sync fails
+- Installable Progressive Web App
 
-### Full Research Journal
+## Evergreen data isolation
 
-- Dedicated **View All Trades / Research Journal** screen
-- Filtered P/L, win rate, trade count, and average RR
-- Winning and losing setup similarity snapshots
-- Best pair, session, SMT, POI support, mitigation, entry level, and BE logic cards
-- Search plus filters for direction, status, pair, result, session, HTF, entry attempt, FVG status, formation day, SMT, SMT strength, POI support, third candle, mitigation, entry level, BE logic, and date range
-- Sort by newest, oldest, P/L, or RR
-- Desktop database table and responsive mobile trade cards
-- Full trade-detail review modal
-- Edit opens the selected trade back inside the three-step trade wizard
-
-### Add Trade — Step 1: Basic Info
-
-- Date and automatic weekday
-- Pair, direction, session, HTF, and automatic LTF
-- New trades default to **1H HTF** and **5m LTF**
-- Took Trade / Missed Trade / Not Taken
-- First Entry / Second Entry
-- Fresh FVG / Partial FVG
-- **When was the FVG formed?** — Today / Previous Day
-
-### Step 2: HTF Analysis
-
-- HTF TradingView/image link cards
-- Add, preview, open, and remove chart links
-- TradingView `/x/` snapshot links are converted to their direct chart image and displayed inside the HTF/LTF chart panel, matching the old journal
-- Screenshot upload/drop fallback for local testing
-- SMT Yes / No
-- If SMT is Yes: Weak SMT / Strong SMT
-- Automatic SMT comparison pair from the Basic Info pair
-  - EURUSD ↔ GBPUSD
-  - XAUUSD Gold ↔ XAGUSD Silver
-  - Other included pairs also have comparison mappings
-- POI support Yes / No
-- If Yes: Previous FVG / Previous OB
-- FVG third candle: Positive / Negative
-- POI mitigation behaviour multi-select
-- **Add More Option** saves a custom HTF option for later Evergreen trades
-
-### Step 3: LTF Analysis
-
-- LTF TradingView/image link cards
-- Add, preview, open, and remove chart links
-- Screenshot upload/drop fallback
-- Entry level: Spartan CISD / BB
-- **Add Option** saves a custom entry level for future Evergreen trades
-- SL pips
-- BE logic: BE Level / Counter FVG Mitigation / ERL
-- Trade outcome: BE / SL / TP
-- Risk amount prefilled at **$50** (still editable), RR, and automatic P/L calculation
-- Save Trade writes the complete Basic + HTF + LTF record to the Evergreen-only local store
-
-## Run in VS Code
-
-1. Extract the project folder.
-2. Open the folder in VS Code.
-3. Install the **Live Server** extension.
-4. Right-click `index.html`.
-5. Choose **Open with Live Server**.
-
-No npm install or build command is required.
-
-## Data separation from the old journal
-
-The browser storage namespace is:
+This app is configured for a separate Supabase project:
 
 ```text
-evergreen_trade_journal_v1
-```
-
-Supabase uses separate Evergreen-only resources:
-
-```text
+Project reference: rugvuvmxmadzosbyvvoh
 Table: evergreen_trades
-Custom options table: evergreen_journal_options
-Storage bucket: evergreen-trade-images
+Options table: evergreen_journal_options
+Private image bucket: evergreen-trade-images
+Browser namespace: evergreen_trade_journal_v1
 ```
 
-The safest setup is a completely separate Supabase project for Evergreen Trade Journal. That prevents overlap in database tables, users, storage, keys, and backups.
+It does not use the old journal's project, tables, bucket, or browser namespace.
 
-Do not point this app at the old journal's table or image bucket. Run `supabase-schema.sql` only in the Supabase project selected for Evergreen.
+## 1. Run the Supabase schema
 
-## Custom option persistence
+1. Open the Evergreen Supabase project.
+2. Go to **SQL Editor → New query**.
+3. Open `supabase-schema.sql` from this project.
+4. Copy the entire file into the SQL editor.
+5. Click **Run**.
 
-Supabase is not connected in this front-end version yet. The **Add Option** buttons currently persist in the Evergreen-only browser storage, so they survive future trades on the same browser.
+Verify that these resources exist:
 
-The included `evergreen_journal_options` Supabase table is ready for the next step, when authentication and live cloud sync are connected.
+```text
+Table Editor
+├── evergreen_trades
+└── evergreen_journal_options
 
-## Screenshot storage note
+Storage
+└── evergreen-trade-images
+```
 
-During local testing, uploaded screenshots are stored inside the local draft and are limited to 2 MB. TradingView image links are better for now. After Supabase is connected, screenshots should upload to the private `evergreen-trade-images` bucket and only the storage path should be saved with the trade.
+The SQL enables Row Level Security and grants the authenticated browser role the required table permissions.
 
-## GitHub Pages deployment
+## 2. Configure Supabase Auth URLs
 
-1. Create a new GitHub repository, such as `evergreen-trade-journal`.
-2. Upload the project files to the repository root.
-3. Open **Settings → Pages**.
-4. Select **Deploy from a branch**.
-5. Select `main` and `/root`, then save.
+In Supabase, open **Authentication → URL Configuration**.
 
-## Next build stage
+Set the Site URL to:
 
-Connect Supabase authentication, save/load trades from `evergreen_trades`, sync custom options through `evergreen_journal_options`, and upload chart screenshots to `evergreen-trade-images`. The responsive research dashboard and local View/Edit workflow are already included.
+```text
+https://johnjitto-m.github.io/evergreen-trade-journal/
+```
 
-## LTF chart reference presets
+Add these Redirect URLs:
 
-New LTF trades start with three separate link cards: LTF CISD setup, CISD entry setup, and BE / SL / TP setup. Older saved drafts are upgraded without deleting existing links.
+```text
+https://johnjitto-m.github.io/evergreen-trade-journal/**
+http://127.0.0.1:5500/**
+http://localhost:5500/**
+```
 
-## Latest layout adjustment
+Email magic-link authentication is used. The first link can also create the Evergreen user account.
 
-- Expanded the main application shell to use nearly the full browser width, leaving only a small responsive gutter.
+## 3. Run locally
 
-## Inline chart preview
+1. Open the project folder in VS Code.
+2. Install the **Live Server** extension.
+3. Right-click `index.html`.
+4. Choose **Open with Live Server**.
+5. Click **Sign In** in the Cloud Sync bar.
+6. Enter your email and open the magic link Supabase sends.
 
-Clicking **Preview** on an HTF or LTF TradingView snapshot link now loads that chart directly into the large chart box on the left, just like the old journal. Clicking the displayed chart—or the **Open Active HTF/LTF Snapshot** button—opens the full-screen image viewer. TradingView `/x/.../` URLs are converted to their underlying snapshot PNG automatically. Uploaded screenshot fallbacks use the same inline panel.
+No npm installation or build command is required. Supabase JavaScript v2 is loaded through its browser CDN.
+
+## 4. Deploy to GitHub Pages
+
+The repository should be:
+
+```text
+https://github.com/johnjitto-m/evergreen-trade-journal
+```
+
+In GitHub:
+
+1. Open **Settings → Pages**.
+2. Select **Deploy from a branch**.
+3. Select branch `main` and folder `/(root)`.
+4. Save.
+
+The live site is:
+
+```text
+https://johnjitto-m.github.io/evergreen-trade-journal/
+```
+
+## 5. Push this updated cloud build
+
+From the project folder:
+
+```bash
+git add .
+git commit -m "Connect Evergreen journal to Supabase"
+git push
+```
+
+GitHub Pages will redeploy automatically.
+
+## Local-data migration
+
+The app does not silently upload browser data. After signing in, the Cloud Sync bar displays how many trades exist only on the current device.
+
+Click **Sync Local Data** to upload them. A confirmation warns that every local entry currently displayed—including any demo entries—will be uploaded. Delete unwanted demo trades before syncing, or export a JSON backup first.
+
+New and edited trades sync automatically while signed in. If Supabase is unavailable, the trade remains saved locally and can be synced later.
+
+## Public versus secret credentials
+
+`supabase-config.js` contains only the browser-safe Project URL and publishable key. That file is expected to be public on GitHub Pages.
+
+Never add any of these to the repository:
+
+```text
+Database password
+Secret key
+service_role key
+JWT secret
+```

@@ -12,7 +12,9 @@ function createId() {
 const STORAGE_KEYS = {
   trades: `${APP_NAMESPACE}:trades`,
   draft: `${APP_NAMESPACE}:trade_draft`,
-  options: `${APP_NAMESPACE}:custom_options`
+  options: `${APP_NAMESPACE}:custom_options`,
+  authEmail: `${APP_NAMESPACE}:auth_email`,
+  syncedIdsPrefix: `${APP_NAMESPACE}:cloud_synced_ids`
 };
 
 const DEFAULT_OPTIONS = {
@@ -145,7 +147,19 @@ const elements = {
   importBtn: document.querySelector("#importBtn"),
   importFile: document.querySelector("#importFile"),
   installBtn: document.querySelector("#installBtn"),
+  syncPanel: document.querySelector(".sync-panel"),
+  syncProviderText: document.querySelector("#syncProviderText"),
+  syncStateText: document.querySelector("#syncStateText"),
+  syncUserText: document.querySelector("#syncUserText"),
+  syncNoteText: document.querySelector("#syncNoteText"),
+  syncNowBtn: document.querySelector("#syncNowBtn"),
   connectBtn: document.querySelector("#connectBtn"),
+  authModal: document.querySelector("#authModal"),
+  authForm: document.querySelector("#authForm"),
+  authEmail: document.querySelector("#authEmail"),
+  authMessage: document.querySelector("#authMessage"),
+  sendMagicLinkBtn: document.querySelector("#sendMagicLinkBtn"),
+  closeAuthModalBtn: document.querySelector("#closeAuthModalBtn"),
   viewAllBtn: document.querySelector("#viewAllBtn"),
   dashboardView: document.querySelector("#dashboardView"),
   researchView: document.querySelector("#researchView"),
@@ -208,6 +222,272 @@ let trades = loadTrades();
 let optionLibrary = loadOptionLibrary();
 let currentDraft = loadDraft() || createEmptyDraft();
 let currentStep = currentDraft.lastStep || "basic";
+let cloudSession = null;
+let cloudUser = null;
+let cloudInitialised = false;
+let cloudBusy = false;
+let loadedCloudUserId = null;
+
+function syncedIdsKey(userId) {
+  return `${STORAGE_KEYS.syncedIdsPrefix}:${userId}`;
+}
+
+function loadSyncedIds(userId = cloudUser?.id) {
+  if (!userId) return new Set();
+  try {
+    const parsed = JSON.parse(localStorage.getItem(syncedIdsKey(userId)) || "[]");
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch (error) {
+    console.warn("Unable to read Evergreen cloud sync markers:", error);
+    return new Set();
+  }
+}
+
+function saveSyncedIds(ids, userId = cloudUser?.id) {
+  if (!userId) return;
+  localStorage.setItem(syncedIdsKey(userId), JSON.stringify([...ids]));
+}
+
+function markTradeSynced(tradeId, userId = cloudUser?.id) {
+  if (!userId || !tradeId) return;
+  const ids = loadSyncedIds(userId);
+  ids.add(tradeId);
+  saveSyncedIds(ids, userId);
+}
+
+function getLocalOnlyTrades(userId = cloudUser?.id) {
+  if (!userId) return trades;
+  const syncedIds = loadSyncedIds(userId);
+  return trades.filter((trade) => {
+    if (trade.cloudUserId && trade.cloudUserId !== userId) return false;
+    return !syncedIds.has(trade.id) && trade.cloudUserId !== userId;
+  });
+}
+
+function updateCloudUi(message = "") {
+  const signedIn = Boolean(cloudUser);
+  const localOnlyCount = signedIn ? getLocalOnlyTrades(cloudUser.id).length : trades.length;
+  elements.syncPanel?.classList.toggle("is-connected", signedIn && !message);
+  elements.syncPanel?.classList.toggle("is-error", Boolean(message));
+
+  if (!window.EvergreenCloud?.isConfigured?.()) {
+    elements.syncProviderText.textContent = "Supabase Not Configured";
+    elements.syncStateText.textContent = "Add the project URL and publishable key.";
+    elements.syncUserText.hidden = true;
+    elements.syncNowBtn.hidden = true;
+    elements.connectBtn.textContent = "Unavailable";
+    elements.connectBtn.disabled = true;
+    return;
+  }
+
+  elements.syncProviderText.textContent = signedIn ? "Supabase Connected" : "Supabase Configured";
+  elements.connectBtn.disabled = cloudBusy;
+  elements.syncNowBtn.disabled = cloudBusy;
+
+  if (message) {
+    elements.syncStateText.textContent = message;
+  } else if (cloudBusy) {
+    elements.syncStateText.textContent = "Syncing Evergreen data…";
+  } else if (signedIn) {
+    const cloudCount = trades.filter((trade) => trade.cloudUserId === cloudUser.id).length;
+    elements.syncStateText.textContent = `${cloudCount} cloud trade${cloudCount === 1 ? "" : "s"} synced.`;
+  } else if (cloudInitialised) {
+    elements.syncStateText.textContent = "Sign in to sync across devices.";
+  } else {
+    elements.syncStateText.textContent = "Checking connection…";
+  }
+
+  elements.syncUserText.hidden = !signedIn;
+  elements.syncUserText.textContent = signedIn ? `Signed in as ${cloudUser.email || "Supabase user"}` : "";
+  elements.connectBtn.textContent = signedIn ? "Logout" : "Sign In";
+  elements.syncNowBtn.hidden = !signedIn;
+  elements.syncNowBtn.textContent = localOnlyCount > 0 ? `Sync Local Data (${localOnlyCount})` : "Sync Options / Refresh";
+  elements.syncNoteText.textContent = signedIn
+    ? (localOnlyCount > 0
+      ? `${localOnlyCount} local trade${localOnlyCount === 1 ? " is" : "s are"} not in Supabase yet.`
+      : "Evergreen cloud data is isolated from the old journal.")
+    : "Evergreen uses a separate Supabase project, tables, and image bucket.";
+}
+
+function openAuthModal() {
+  elements.authMessage.textContent = "";
+  elements.authEmail.value = localStorage.getItem(STORAGE_KEYS.authEmail) || "";
+  elements.authModal.hidden = false;
+  document.body.classList.add("modal-open");
+  window.setTimeout(() => elements.authEmail.focus(), 0);
+}
+
+function closeAuthModal() {
+  elements.authModal.hidden = true;
+  if (elements.modal.hidden && elements.tradeDetailModal.hidden && elements.imagePreviewModal.hidden) {
+    document.body.classList.remove("modal-open");
+  }
+}
+
+function cloudOptionCategory(category) {
+  return category === "poiMitigation" ? "htf_poi_mitigation" : "ltf_entry_level";
+}
+
+function replaceTradeInLocalList(trade) {
+  const index = trades.findIndex((item) => item.id === trade.id);
+  if (index >= 0) trades[index] = trade;
+  else trades.unshift(trade);
+  saveTrades();
+  renderTrades();
+}
+
+async function loadCloudData() {
+  if (!cloudUser || cloudBusy) return;
+  cloudBusy = true;
+  updateCloudUi();
+  try {
+    const [cloudTrades, cloudOptions] = await Promise.all([
+      window.EvergreenCloud.loadTrades(),
+      window.EvergreenCloud.loadOptions()
+    ]);
+
+    const syncedIds = loadSyncedIds(cloudUser.id);
+    const cloudIds = new Set(cloudTrades.map((trade) => trade.id));
+    const localOnly = trades.filter((trade) => {
+      if (trade.cloudUserId && trade.cloudUserId !== cloudUser.id) return false;
+      if (cloudIds.has(trade.id)) return false;
+      if (syncedIds.has(trade.id)) return false;
+      return true;
+    });
+
+    trades = [...cloudTrades, ...localOnly];
+    cloudIds.forEach((id) => syncedIds.add(id));
+    saveSyncedIds(syncedIds, cloudUser.id);
+
+    const cloudPoi = cloudOptions
+      .filter((option) => option.category === "htf_poi_mitigation")
+      .map((option) => option.label);
+    const cloudEntry = cloudOptions
+      .filter((option) => option.category === "ltf_entry_level")
+      .map((option) => option.label);
+    optionLibrary = {
+      poiMitigation: uniqueValues([...DEFAULT_OPTIONS.poiMitigation, ...optionLibrary.poiMitigation, ...cloudPoi]),
+      entryLevel: uniqueValues([...DEFAULT_OPTIONS.entryLevel, ...optionLibrary.entryLevel, ...cloudEntry])
+    };
+
+    saveTrades();
+    saveOptionLibrary();
+    renderDynamicOptions();
+    renderTrades();
+    loadedCloudUserId = cloudUser.id;
+    updateCloudUi();
+  } catch (error) {
+    console.error("Unable to load Evergreen cloud data:", error);
+    updateCloudUi(`Cloud error: ${error.message || "Unable to load data."}`);
+    showToast("Cloud connection failed. Run supabase-schema.sql and check Auth settings.");
+  } finally {
+    cloudBusy = false;
+    updateCloudUi(elements.syncPanel?.classList.contains("is-error") ? elements.syncStateText.textContent : "");
+  }
+}
+
+async function handleCloudAuthChange(session, event = "") {
+  cloudSession = session;
+  cloudUser = session?.user || null;
+  cloudInitialised = true;
+
+  if (!cloudUser) {
+    loadedCloudUserId = null;
+    updateCloudUi();
+    return;
+  }
+
+  closeAuthModal();
+  updateCloudUi();
+  if (loadedCloudUserId !== cloudUser.id || ["SIGNED_IN", "INITIAL_SESSION", "TOKEN_REFRESHED"].includes(event)) {
+    await loadCloudData();
+  }
+}
+
+async function initialiseCloud() {
+  updateCloudUi();
+  if (!window.EvergreenCloud?.isConfigured?.()) {
+    cloudInitialised = true;
+    updateCloudUi();
+    return;
+  }
+
+  try {
+    const initialSession = await window.EvergreenCloud.init(handleCloudAuthChange);
+    await handleCloudAuthChange(initialSession, "INITIAL_SESSION");
+  } catch (error) {
+    cloudInitialised = true;
+    console.error("Supabase initialisation failed:", error);
+    updateCloudUi(`Connection error: ${error.message || "Supabase could not start."}`);
+  }
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+  const email = elements.authEmail.value.trim();
+  if (!email) return;
+  elements.authMessage.textContent = "Sending secure sign-in link…";
+  elements.sendMagicLinkBtn.disabled = true;
+  localStorage.setItem(STORAGE_KEYS.authEmail, email);
+  try {
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+    await window.EvergreenCloud.signInWithMagicLink(email, redirectTo);
+    elements.authMessage.textContent = "Magic link sent. Check your inbox and open the link on this device.";
+  } catch (error) {
+    console.error("Magic-link sign-in failed:", error);
+    elements.authMessage.textContent = error.message || "Unable to send the sign-in link.";
+  } finally {
+    elements.sendMagicLinkBtn.disabled = false;
+  }
+}
+
+async function syncLocalDataToCloud() {
+  if (!cloudUser || cloudBusy) return;
+  const localOnly = getLocalOnlyTrades(cloudUser.id);
+  if (localOnly.length) {
+    const confirmed = window.confirm(
+      `Upload ${localOnly.length} local trade${localOnly.length === 1 ? "" : "s"} to Evergreen Supabase? ` +
+      "Every local trade currently shown will be uploaded, including any demo entries you have not deleted."
+    );
+    if (!confirmed) return;
+  }
+
+  cloudBusy = true;
+  updateCloudUi();
+  try {
+    for (const localTrade of localOnly) {
+      const syncedTrade = await window.EvergreenCloud.saveTrade(localTrade);
+      replaceTradeInLocalList(syncedTrade);
+      markTradeSynced(syncedTrade.id, cloudUser.id);
+    }
+    await window.EvergreenCloud.syncOptions(optionLibrary);
+    showToast(localOnly.length
+      ? `${localOnly.length} Evergreen trade${localOnly.length === 1 ? "" : "s"} synced to Supabase.`
+      : "Evergreen custom options refreshed in Supabase.");
+  } catch (error) {
+    console.error("Local-to-cloud sync failed:", error);
+    showToast(`Cloud sync stopped: ${error.message || "Unknown Supabase error."}`);
+  } finally {
+    cloudBusy = false;
+    updateCloudUi();
+  }
+}
+
+async function syncSavedTradeToCloud(trade) {
+  if (!cloudUser) return null;
+  try {
+    const syncedTrade = await window.EvergreenCloud.saveTrade(trade);
+    markTradeSynced(syncedTrade.id, cloudUser.id);
+    replaceTradeInLocalList(syncedTrade);
+    updateCloudUi();
+    return syncedTrade;
+  } catch (error) {
+    console.error("Evergreen cloud trade save failed:", error);
+    updateCloudUi();
+    showToast(`Trade saved locally, but cloud sync failed: ${error.message || "Unknown error."}`);
+    return null;
+  }
+}
 
 function createEmptyDraft() {
   return {
@@ -234,15 +514,12 @@ function createEmptyDraft() {
 function loadTrades() {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.trades);
-    if (!stored) {
-      localStorage.setItem(STORAGE_KEYS.trades, JSON.stringify(seedTrades));
-      return structuredClone(seedTrades);
-    }
+    if (!stored) return [];
     const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : structuredClone(seedTrades);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
     console.error("Unable to load Evergreen trades:", error);
-    return structuredClone(seedTrades);
+    return [];
   }
 }
 
@@ -611,7 +888,7 @@ function handleHtfSubmit(event) {
   showStep("ltf");
 }
 
-function handleLtfSubmit(event) {
+async function handleLtfSubmit(event) {
   event.preventDefault();
   elements.ltfMessage.textContent = "";
   captureLtfForm();
@@ -665,7 +942,14 @@ function handleLtfSubmit(event) {
   currentDraft = createEmptyDraft();
   renderTrades();
   closeModalWithoutSavingDraft();
-  showToast("Evergreen trade saved with Basic, HTF, and LTF analysis.");
+
+  if (cloudUser) {
+    showToast("Trade saved locally. Syncing to Supabase…");
+    const syncedTrade = await syncSavedTradeToCloud(trade);
+    if (syncedTrade) showToast("Evergreen trade saved and synced to Supabase.");
+  } else {
+    showToast("Evergreen trade saved locally. Sign in to enable cloud sync.");
+  }
 }
 
 function closeModalWithoutSavingDraft() {
@@ -723,7 +1007,7 @@ function renderOptionCards({ container, values, name, type, selected }) {
   });
 }
 
-function addCustomOption(category) {
+async function addCustomOption(category) {
   const promptLabel = category === "poiMitigation"
     ? "Enter a new POI mitigation behaviour:"
     : "Enter a new LTF entry level:";
@@ -753,7 +1037,18 @@ function addCustomOption(category) {
   }
   renderDynamicOptions();
   saveDraft();
-  showToast("Option saved to the Evergreen option library for future trades.");
+
+  if (cloudUser) {
+    try {
+      await window.EvergreenCloud.saveOption(cloudOptionCategory(category), value);
+      showToast("Option saved locally and to Evergreen Supabase.");
+    } catch (error) {
+      console.error("Custom option cloud save failed:", error);
+      showToast("Option saved locally, but Supabase sync failed.");
+    }
+  } else {
+    showToast("Option saved locally. Sign in to sync it across devices.");
+  }
 }
 
 function ensureChartState(type) {
@@ -1744,7 +2039,7 @@ function importJsonFile(file) {
   reader.readAsText(file);
 }
 
-function handleRowAction(event) {
+async function handleRowAction(event) {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
   const trade = trades.find((item) => item.id === button.dataset.id);
@@ -1753,10 +2048,25 @@ function handleRowAction(event) {
   if (button.dataset.action === "delete") {
     const confirmed = window.confirm(`Delete the ${trade.pair} Evergreen trade from ${trade.date}?`);
     if (!confirmed) return;
+
+    const isCloudTrade = Boolean(cloudUser) && (
+      trade.cloudUserId === cloudUser.id || loadSyncedIds(cloudUser.id).has(trade.id)
+    );
+    if (isCloudTrade) {
+      try {
+        await window.EvergreenCloud.deleteTrade(trade);
+      } catch (error) {
+        console.error("Cloud trade deletion failed:", error);
+        showToast(`Delete failed in Supabase: ${error.message || "Unknown error."}`);
+        return;
+      }
+    }
+
     trades = trades.filter((item) => item.id !== trade.id);
     saveTrades();
     renderTrades();
-    showToast("Trade deleted from the Evergreen journal only.");
+    updateCloudUi();
+    showToast(isCloudTrade ? "Trade deleted from Evergreen Supabase." : "Local Evergreen trade deleted.");
     return;
   }
 
@@ -1834,7 +2144,8 @@ function bindEvents() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (!elements.imagePreviewModal.hidden) closeImagePreview();
+    if (!elements.authModal.hidden) closeAuthModal();
+    else if (!elements.imagePreviewModal.hidden) closeImagePreview();
     else if (!elements.tradeDetailModal.hidden) closeTradeDetail();
     else if (!elements.modal.hidden) closeModal();
   });
@@ -1850,8 +2161,25 @@ function bindEvents() {
     if (file) importJsonFile(file);
   });
 
-  elements.connectBtn.addEventListener("click", () => {
-    showToast("Supabase is intentionally not connected yet. Use the Evergreen-only tables in supabase-schema.sql.");
+  elements.connectBtn.addEventListener("click", async () => {
+    if (!cloudUser) {
+      openAuthModal();
+      return;
+    }
+    const confirmed = window.confirm(`Sign out ${cloudUser.email || "this Supabase user"}?`);
+    if (!confirmed) return;
+    try {
+      await window.EvergreenCloud.signOut();
+      showToast("Signed out of Evergreen Supabase. Local cached data remains on this device.");
+    } catch (error) {
+      showToast(`Unable to sign out: ${error.message || "Unknown error."}`);
+    }
+  });
+  elements.syncNowBtn.addEventListener("click", syncLocalDataToCloud);
+  elements.authForm.addEventListener("submit", handleAuthSubmit);
+  elements.closeAuthModalBtn.addEventListener("click", closeAuthModal);
+  elements.authModal.addEventListener("click", (event) => {
+    if (event.target === elements.authModal) closeAuthModal();
   });
 
   elements.viewAllBtn.addEventListener("click", () => showPage("research"));
@@ -1898,6 +2226,7 @@ updateWeekRange();
 syncChoiceCards();
 renderTrades();
 bindEvents();
+initialiseCloud();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {

@@ -8,7 +8,7 @@
   <title>Evergreen Trade Journal</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="styles.css?v=9" />
 </head>
 <body>
   <div class="ambient ambient-left" aria-hidden="true"></div>
@@ -34,11 +34,15 @@
     <section class="sync-panel panel" aria-label="Cloud sync status">
       <div class="sync-copy">
         <span class="eyebrow">CLOUD SYNC</span>
-        <strong>Supabase Ready</strong>
-        <span class="muted">Not connected yet</span>
-        <span class="sync-note">Evergreen data uses its own namespace and tables.</span>
+        <strong id="syncProviderText">Supabase Configured</strong>
+        <span class="muted" id="syncStateText">Checking connection…</span>
+        <span class="sync-user" id="syncUserText" hidden></span>
+        <span class="sync-note" id="syncNoteText">Evergreen uses a separate Supabase project, tables, and image bucket.</span>
       </div>
-      <button class="btn btn-secondary" type="button" id="connectBtn">Connect Later</button>
+      <div class="sync-actions">
+        <button class="btn btn-secondary" type="button" id="syncNowBtn" hidden>Sync Local Data</button>
+        <button class="btn btn-secondary" type="button" id="connectBtn">Sign In</button>
+      </div>
     </section>
 
     <div class="page-view" id="dashboardView">
@@ -450,7 +454,7 @@
               </div>
 
               <div class="chart-dropzone" id="htfDropZone">
-                <img class="dropzone-preview" id="htfDropPreview" alt="Active HTF chart preview" referrerpolicy="no-referrer" hidden />
+                <img class="dropzone-preview" id="htfDropPreview" alt="HTF chart preview" hidden />
                 <p>Paste TradingView snapshot links, image URLs, or upload an HTF screenshot</p>
               </div>
 
@@ -572,7 +576,7 @@
               </div>
 
               <div class="chart-dropzone" id="ltfDropZone">
-                <img class="dropzone-preview" id="ltfDropPreview" alt="Active LTF chart preview" referrerpolicy="no-referrer" hidden />
+                <img class="dropzone-preview" id="ltfDropPreview" alt="LTF chart preview" hidden />
                 <p>Paste TradingView snapshot links, image URLs, or upload an LTF screenshot</p>
               </div>
 
@@ -674,6 +678,29 @@
     </section>
   </div>
 
+
+  <div class="modal-backdrop auth-backdrop" id="authModal" hidden>
+    <section class="auth-modal panel" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div class="detail-header">
+        <div>
+          <p class="eyebrow">EVERGREEN CLOUD SYNC</p>
+          <h2 id="authModalTitle">Sign in with email</h2>
+        </div>
+        <button class="icon-btn" id="closeAuthModalBtn" type="button" aria-label="Close sign-in window">×</button>
+      </div>
+      <form class="auth-form" id="authForm">
+        <p class="muted">Supabase will email you a secure magic link. Open it on this device to finish signing in.</p>
+        <label>
+          <span>Email address</span>
+          <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+        </label>
+        <button class="btn btn-primary btn-large" id="sendMagicLinkBtn" type="submit">Send Magic Link</button>
+        <p class="form-message" id="authMessage" role="status"></p>
+        <p class="auth-security-note">Only the public Supabase publishable key is included in this app. Your database is protected by Row Level Security.</p>
+      </form>
+    </section>
+  </div>
+
   <div class="modal-backdrop detail-backdrop" id="tradeDetailModal" hidden>
     <section class="trade-detail-modal" role="dialog" aria-modal="true" aria-labelledby="tradeDetailTitle">
       <div class="detail-header">
@@ -698,6 +725,9 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=9"></script>
+  <script src="supabase-sync.js?v=9"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
