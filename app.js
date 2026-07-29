@@ -773,7 +773,6 @@ function captureHtfForm() {
     htfCisdLocation: formData.get("htfCisdLocation") || "",
     poiMitigation: formData.getAll("poiMitigation")
   };
-  applySweepEntryDefault();
   return currentDraft.htf;
 }
 
@@ -826,7 +825,6 @@ function restoreDraftIntoForms() {
 
   setFormValues(elements.htfForm, currentDraft.htf);
   setFormValues(elements.ltfForm, currentDraft.ltf);
-  applySweepEntryDefault();
   if (!elements.riskAmount.value) elements.riskAmount.value = DEFAULT_RISK_AMOUNT;
   updateConditionalPanels();
   updateCalculatedPnl();
@@ -2420,6 +2418,17 @@ function bindEvents() {
       updateConditionalPanels();
       updateCalculatedPnl();
       captureVisibleStep();
+
+      // Sweep suggests Spartan CISD once, at the moment Sweep is selected.
+      // After that, the trader can manually uncheck Spartan CISD and the choice is preserved.
+      if (
+        event.target.matches('input[name="fvgInteraction"]') &&
+        event.target.checked &&
+        event.target.value === "Sweep"
+      ) {
+        applySweepEntryDefault();
+      }
+
       saveDraft();
     }
   });
