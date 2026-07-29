@@ -8,7 +8,7 @@
   <title>Evergreen Trade Journal</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=18" />
+  <link rel="stylesheet" href="styles.css?v=23" />
 </head>
 <body>
   <div class="ambient ambient-left" aria-hidden="true"></div>
@@ -219,6 +219,10 @@
           <label class="filter-field">
             <span>FVG Formed</span>
             <select id="filterFvgFormed" data-filter-key="fvgFormed"><option value="">Any Formation Day</option></select>
+          </label>
+          <label class="filter-field">
+            <span>Day Bias</span>
+            <select id="filterDayBias" data-filter-key="dayBias"><option value="">Any Day Bias</option></select>
           </label>
           <label class="filter-field">
             <span>SMT</span>
@@ -468,36 +472,77 @@
       <section class="wizard-step analysis-step" id="htfStep" data-step="htf" hidden>
         <form id="htfAnalysisForm" novalidate>
           <div class="analysis-layout">
-            <aside class="chart-column" aria-label="HTF chart references">
-              <div class="chart-column-heading">
-                <div>
-                  <p class="section-label">CHART REFERENCES</p>
-                  <h3>HTF Charts</h3>
+            <aside class="chart-column chart-column-multi" aria-label="Day and HTF chart references">
+              <section class="chart-reference-section chart-reference-section--day">
+                <div class="chart-column-heading">
+                  <div>
+                    <p class="section-label">DAY TIME FRAME</p>
+                    <h3>Day Chart</h3>
+                  </div>
                 </div>
-              </div>
 
-              <div class="chart-dropzone" id="htfDropZone">
-                <img class="dropzone-preview" id="htfDropPreview" alt="HTF chart preview" hidden />
-                <p>Paste TradingView snapshot links, image URLs, or upload an HTF screenshot</p>
-              </div>
+                <div class="chart-dropzone compact-chart-dropzone" id="dayDropZone">
+                  <img class="dropzone-preview" id="dayDropPreview" alt="Day time frame chart preview" hidden />
+                  <p>Paste a TradingView day-chart snapshot link and preview the daily bias.</p>
+                </div>
 
-              <div class="chart-links-heading">
-                <h3>TradingView / Image Links</h3>
-                <button class="btn btn-secondary btn-compact" id="addHtfLinkBtn" type="button">+ Add Link</button>
-              </div>
-              <div class="chart-link-list" id="htfChartLinks"></div>
+                <div class="chart-links-heading">
+                  <h3>Day Chart Link</h3>
+                  <button class="btn btn-secondary btn-compact" id="addDayLinkBtn" type="button">+ Add Link</button>
+                </div>
+                <div class="chart-link-list" id="dayChartLinks"></div>
+                <p class="chart-help">Use the TradingView camera icon on the Day time frame and copy the chart-image link.</p>
+                <button class="btn btn-secondary active-snapshot-button" id="openActiveDayPreviewBtn" type="button" hidden>Open Active Day Snapshot</button>
+              </section>
 
-              <label class="btn btn-primary upload-button">
-                Upload HTF Screenshot Fallback
-                <input id="htfUploadInput" type="file" accept="image/*" hidden />
-              </label>
-              <p class="chart-help">Use TradingView camera icon → Copy link to chart image. Add multiple references for before mitigation and current mitigation.</p>
-              <button class="btn btn-secondary active-snapshot-button" id="openActiveHtfPreviewBtn" type="button" hidden>Open Active HTF Snapshot</button>
+              <section class="chart-reference-section chart-reference-section--htf">
+                <div class="chart-column-heading">
+                  <div>
+                    <p class="section-label">HTF CHART</p>
+                    <h3>HTF Charts</h3>
+                  </div>
+                </div>
+
+                <div class="chart-dropzone compact-chart-dropzone" id="htfDropZone">
+                  <img class="dropzone-preview" id="htfDropPreview" alt="HTF chart preview" hidden />
+                  <p>Paste TradingView snapshot links, image URLs, or upload an HTF screenshot.</p>
+                </div>
+
+                <div class="chart-links-heading">
+                  <h3>HTF TradingView / Image Links</h3>
+                  <button class="btn btn-secondary btn-compact" id="addHtfLinkBtn" type="button">+ Add Link</button>
+                </div>
+                <div class="chart-link-list" id="htfChartLinks"></div>
+
+                <label class="btn btn-primary upload-button">
+                  Upload HTF Screenshot Fallback
+                  <input id="htfUploadInput" type="file" accept="image/*" hidden />
+                </label>
+                <p class="chart-help">Add HTF references for before mitigation and current mitigation.</p>
+                <button class="btn btn-secondary active-snapshot-button" id="openActiveHtfPreviewBtn" type="button" hidden>Open Active HTF Snapshot</button>
+              </section>
             </aside>
 
             <div class="analysis-questions" id="htfQuestions">
               <fieldset class="analysis-question-card">
                 <legend class="section-label">QUESTION 1</legend>
+                <p class="analysis-question">Day bias?</p>
+                <div class="choice-grid choice-grid-2 compact-choices">
+                  <label class="choice-card">
+                    <input type="radio" name="dayBias" value="Buy" required />
+                    <strong>Buy</strong>
+                    <small>The Day time frame bias is bullish.</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="dayBias" value="Sell" required />
+                    <strong>Sell</strong>
+                    <small>The Day time frame bias is bearish.</small>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="analysis-question-card">
+                <legend class="section-label">QUESTION 2</legend>
                 <p class="analysis-question">Does it have SMT?</p>
                 <div class="choice-grid choice-grid-2 compact-choices">
                   <label class="choice-card">
@@ -525,7 +570,7 @@
               </fieldset>
 
               <fieldset class="analysis-question-card">
-                <legend class="section-label">QUESTION 2</legend>
+                <legend class="section-label">QUESTION 3</legend>
                 <p class="analysis-question">Is this POI supported by anything?</p>
                 <div class="choice-grid choice-grid-2 compact-choices">
                   <label class="choice-card">
@@ -553,7 +598,7 @@
               </fieldset>
 
               <fieldset class="analysis-question-card">
-                <legend class="section-label">QUESTION 3</legend>
+                <legend class="section-label">QUESTION 4</legend>
                 <p class="analysis-question">FVG created third candle is?</p>
                 <div class="choice-grid choice-grid-2 compact-choices">
                   <label class="choice-card">
@@ -570,7 +615,7 @@
               </fieldset>
 
               <fieldset class="analysis-question-card">
-                <legend class="section-label">QUESTION 4</legend>
+                <legend class="section-label">QUESTION 5</legend>
                 <p class="analysis-question">FVG mitigation or sweep?</p>
                 <div class="choice-grid choice-grid-2 compact-choices">
                   <label class="choice-card">
@@ -588,7 +633,7 @@
               </fieldset>
 
               <fieldset class="analysis-question-card">
-                <legend class="section-label">QUESTION 5</legend>
+                <legend class="section-label">QUESTION 6</legend>
                 <p class="analysis-question">Is this POI in premium or discount?</p>
                 <div class="choice-grid choice-grid-2 compact-choices">
                   <label class="choice-card">
@@ -605,7 +650,7 @@
               </fieldset>
 
               <fieldset class="analysis-question-card">
-                <legend class="section-label">QUESTION 6</legend>
+                <legend class="section-label">QUESTION 7</legend>
                 <p class="analysis-question">Does this POI have a clean HTF CISD?</p>
                 <div class="choice-grid choice-grid-2 compact-choices">
                   <label class="choice-card">
@@ -633,7 +678,7 @@
               </fieldset>
 
               <fieldset class="analysis-question-card">
-                <legend class="section-label">QUESTION 7</legend>
+                <legend class="section-label">QUESTION 8</legend>
                 <p class="analysis-question">POI mitigation behaviour</p>
                 <p class="analysis-hint">Select all that apply. Added options stay available for future Evergreen trades.</p>
                 <div class="choice-grid choice-grid-2 compact-choices" id="poiMitigationOptions"></div>
@@ -830,8 +875,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=21"></script>
-  <script src="supabase-sync.js?v=21"></script>
-  <script src="app.js?v=21"></script>
+  <script src="supabase-config.js?v=23"></script>
+  <script src="supabase-sync.js?v=23"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>

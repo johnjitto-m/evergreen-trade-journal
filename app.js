@@ -203,6 +203,15 @@ const elements = {
 };
 
 const chartUi = {
+  day: {
+    list: document.querySelector("#dayChartLinks"),
+    addButton: document.querySelector("#addDayLinkBtn"),
+    uploadInput: null,
+    dropZone: document.querySelector("#dayDropZone"),
+    preview: document.querySelector("#dayDropPreview"),
+    openActiveButton: document.querySelector("#openActiveDayPreviewBtn"),
+    defaultLabel: "Day bias chart"
+  },
   htf: {
     list: document.querySelector("#htfChartLinks"),
     addButton: document.querySelector("#addHtfLinkBtn"),
@@ -511,6 +520,10 @@ function createEmptyDraft() {
     createdAt: new Date().toISOString(),
     lastStep: "basic",
     basic: {},
+    day: {
+      chartLinks: [{ id: createId(), label: chartUi?.day?.defaultLabel || "Day bias chart", url: "" }],
+      activePreview: null
+    },
     htf: {
       chartLinks: [{ id: createId(), label: chartUi?.htf?.defaultLabel || "HTF before mitigation", url: "" }],
       uploadedImage: null,
@@ -575,6 +588,17 @@ function normaliseDraft(draft) {
     ...empty,
     ...draft,
     basic: { ...empty.basic, ...(draft.basic || {}) },
+    day: {
+      ...empty.day,
+      ...(draft.day || {}),
+      chartLinks: Array.isArray(draft.day?.chartLinks) && draft.day.chartLinks.length
+        ? draft.day.chartLinks.map((link) => ({
+          id: link.id || createId(),
+          label: link.label || chartUi.day.defaultLabel,
+          url: link.url || ""
+        }))
+        : empty.day.chartLinks
+    },
     htf: {
       ...empty.htf,
       ...(draft.htf || {}),
@@ -775,6 +799,7 @@ function captureHtfForm() {
   const formData = new FormData(elements.htfForm);
   currentDraft.htf = {
     ...currentDraft.htf,
+    dayBias: formData.get("dayBias") || "",
     hasSmt: formData.get("hasSmt") || "",
     smtStrength: formData.get("smtStrength") || "",
     smtPair: elements.smtPairText.textContent,
@@ -982,7 +1007,10 @@ async function handleLtfSubmit(event) {
     riskAmount,
     pnl: currentDraft.ltf.result ? pnl : null,
     slPips,
-    htfAnalysis: structuredClone(currentDraft.htf),
+    htfAnalysis: {
+      ...structuredClone(currentDraft.htf),
+      dayChartLinks: structuredClone(currentDraft.day?.chartLinks || [])
+    },
     ltfAnalysis: structuredClone(currentDraft.ltf),
     createdAt: currentDraft.createdAt,
     updatedAt: new Date().toISOString(),
@@ -1138,6 +1166,7 @@ function addChartLink(type, preset = {}) {
 }
 
 function renderAllChartLinks() {
+  renderChartLinks("day");
   renderChartLinks("htf");
   renderChartLinks("ltf");
 }
@@ -1316,17 +1345,20 @@ function bindChartUi(type) {
   ui.addButton.addEventListener("click", () => addChartLink(type));
   ui.list.addEventListener("input", (event) => handleChartListInput(type, event));
   ui.list.addEventListener("click", (event) => handleChartListAction(type, event));
-  ui.uploadInput.addEventListener("change", () => {
-    const [file] = ui.uploadInput.files;
-    if (file) handleChartImage(type, file);
-    ui.uploadInput.value = "";
-  });
+  if (ui.uploadInput) {
+    ui.uploadInput.addEventListener("change", () => {
+      const [file] = ui.uploadInput.files;
+      if (file) handleChartImage(type, file);
+      ui.uploadInput.value = "";
+    });
+  }
 
   ui.dropZone.tabIndex = 0;
   ui.dropZone.addEventListener("click", () => {
     const active = getActiveChartPreview(type);
     if (active?.src) openImagePreview(active.src, active.originalSrc || active.src);
-    else ui.uploadInput.click();
+    else if (ui.uploadInput) ui.uploadInput.click();
+    else showToast("Paste a Day chart snapshot link below, then click Preview.");
   });
   ui.openActiveButton.addEventListener("click", () => {
     const active = getActiveChartPreview(type);
@@ -1343,17 +1375,19 @@ function bindChartUi(type) {
     ui.openActiveButton.hidden = true;
     showToast("That chart image could not be loaded. Check the TradingView snapshot link and your internet connection.");
   });
-  ui.dropZone.addEventListener("dragover", (event) => {
-    event.preventDefault();
-    ui.dropZone.classList.add("drag-active");
-  });
-  ui.dropZone.addEventListener("dragleave", () => ui.dropZone.classList.remove("drag-active"));
-  ui.dropZone.addEventListener("drop", (event) => {
-    event.preventDefault();
-    ui.dropZone.classList.remove("drag-active");
-    const [file] = event.dataTransfer.files;
-    if (file) handleChartImage(type, file);
-  });
+  if (ui.uploadInput) {
+    ui.dropZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      ui.dropZone.classList.add("drag-active");
+    });
+    ui.dropZone.addEventListener("dragleave", () => ui.dropZone.classList.remove("drag-active"));
+    ui.dropZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      ui.dropZone.classList.remove("drag-active");
+      const [file] = event.dataTransfer.files;
+      if (file) handleChartImage(type, file);
+    });
+  }
   ui.dropZone.addEventListener("paste", (event) => handleChartPaste(type, event));
 }
 
@@ -1361,6 +1395,10 @@ function handleChartPaste(type, event) {
   const items = [...(event.clipboardData?.items || [])];
   const imageItem = items.find((item) => item.type.startsWith("image/"));
   if (imageItem) {
+    if (!chartUi[type].uploadInput) {
+      showToast("Use a TradingView snapshot link for the Day chart preview.");
+      return;
+    }
     const file = imageItem.getAsFile();
     if (file) handleChartImage(type, file);
     return;
@@ -1406,6 +1444,7 @@ function handleChartImage(type, file) {
 }
 
 function updateChartPreviews() {
+  updateChartPreview("day");
   updateChartPreview("htf");
   updateChartPreview("ltf");
 }
@@ -1448,7 +1487,7 @@ function updateChartPreview(type) {
 
 const RESEARCH_FILTER_KEYS = [
   "direction", "status", "pair", "result", "session", "htf", "entryAttempt", "fvgStatus",
-  "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction",
+  "fvgFormed", "dayBias", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction",
   "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"
 ];
 
@@ -1458,6 +1497,7 @@ const INSIGHT_LABELS = {
   session: "Session",
   fvgStatus: "FVG status",
   fvgFormed: "FVG formed",
+  dayBias: "Day bias",
   hasSmt: "SMT",
   smtStrength: "SMT strength",
   poiSupportType: "POI support",
@@ -1473,6 +1513,7 @@ const INSIGHT_LABELS = {
 
 function getTradeField(trade, key) {
   const nested = {
+    dayBias: trade.htfAnalysis?.dayBias,
     hasSmt: trade.htfAnalysis?.hasSmt,
     smtStrength: trade.htfAnalysis?.smtStrength,
     smtPair: trade.htfAnalysis?.smtPair,
@@ -1534,6 +1575,7 @@ function tradeSearchText(trade) {
   const values = [
     trade.date, trade.day, trade.pair, trade.direction, trade.status, trade.entryAttempt,
     trade.fvgStatus, trade.fvgFormed, trade.result, trade.session, trade.htf, trade.ltf,
+    getTradeField(trade, "dayBias"),
     getTradeField(trade, "hasSmt"), getTradeField(trade, "smtStrength"),
     getTradeField(trade, "smtPair"), getTradeField(trade, "poiSupported"),
     ...getComparableValues(getTradeField(trade, "poiSupportType")),
@@ -1628,7 +1670,7 @@ function mostCommonInsight(subset, key) {
 }
 
 function renderSimilarityList(container, subset) {
-  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"];
+  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "dayBias", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"];
   const insights = insightKeys.map((key) => mostCommonInsight(subset, key)).filter(Boolean).slice(0, 6);
   if (!insights.length) {
     container.innerHTML = '<p class="empty-insight">Not enough recorded trades for a similarity pattern.</p>';
@@ -1685,6 +1727,7 @@ function renderEdgeCards(filtered) {
   const definitions = [
     ["BEST PAIR", "pair", false],
     ["BEST SESSION", "session", false],
+    ["BEST DAY BIAS", "dayBias", false],
     ["BEST SMT TYPE", "smtStrength", false],
     ["BEST POI SUPPORT", "poiSupportType", false],
     ["BEST FVG INTERACTION", "fvgInteraction", false],
@@ -2033,6 +2076,7 @@ function openTradeDetail(trade) {
 
       <div class="trade-view-main">
         <aside class="trade-view-chart-column" aria-label="Saved trade charts">
+          ${reviewChartPanel("Day Time Frame", { chartLinks: trade.htfAnalysis?.dayChartLinks || [] }, "day")}
           ${reviewChartPanel("HTF Charts", trade.htfAnalysis, "htf")}
           ${reviewChartPanel("LTF Charts", trade.ltfAnalysis, "ltf", {
             preferredLink: getMatchingOutcomeLink(trade.ltfAnalysis, trade.result)
@@ -2048,13 +2092,14 @@ function openTradeDetail(trade) {
               </div>
             </div>
             <div class="review-question-grid review-question-grid--htf">
-              ${reviewQuestionCard("1", "Does it have SMT?", smtAnswer)}
-              ${reviewQuestionCard("2", "Is this POI supported by anything?", poiSupportAnswer)}
-              ${reviewQuestionCard("3", "FVG created third candle is?", getTradeField(trade, "thirdCandle"))}
-              ${reviewQuestionCard("4", "FVG mitigation or sweep?", getTradeField(trade, "fvgInteraction"))}
-              ${reviewQuestionCard("5", "Is this POI in premium or discount?", getTradeField(trade, "poiZone"))}
-              ${reviewQuestionCard("6", "Does this POI have a clean HTF CISD?", cleanCisdAnswer)}
-              ${reviewQuestionCard("7", "POI mitigation behaviour", getTradeField(trade, "poiMitigation"), "review-question-card--wide")}
+              ${reviewQuestionCard("1", "Day bias?", getTradeField(trade, "dayBias"))}
+              ${reviewQuestionCard("2", "Does it have SMT?", smtAnswer)}
+              ${reviewQuestionCard("3", "Is this POI supported by anything?", poiSupportAnswer)}
+              ${reviewQuestionCard("4", "FVG created third candle is?", getTradeField(trade, "thirdCandle"))}
+              ${reviewQuestionCard("5", "FVG mitigation or sweep?", getTradeField(trade, "fvgInteraction"))}
+              ${reviewQuestionCard("6", "Is this POI in premium or discount?", getTradeField(trade, "poiZone"))}
+              ${reviewQuestionCard("7", "Does this POI have a clean HTF CISD?", cleanCisdAnswer)}
+              ${reviewQuestionCard("8", "POI mitigation behaviour", getTradeField(trade, "poiMitigation"))}
             </div>
           </section>
 
@@ -2086,6 +2131,12 @@ function closeTradeDetail() {
 }
 
 function editTrade(trade) {
+  const savedHtfAnalysis = structuredClone(trade.htfAnalysis || {});
+  const savedDayChartLinks = Array.isArray(savedHtfAnalysis.dayChartLinks)
+    ? savedHtfAnalysis.dayChartLinks
+    : [];
+  delete savedHtfAnalysis.dayChartLinks;
+
   const basic = {
     date: trade.date || "",
     day: trade.day || "",
@@ -2105,7 +2156,11 @@ function editTrade(trade) {
     createdAt: trade.createdAt || new Date().toISOString(),
     lastStep: "basic",
     basic,
-    htf: structuredClone(trade.htfAnalysis || {}),
+    day: {
+      chartLinks: savedDayChartLinks,
+      activePreview: null
+    },
+    htf: savedHtfAnalysis,
     ltf: structuredClone(trade.ltfAnalysis || {})
   });
   saveDraft();
@@ -2303,12 +2358,13 @@ function exportJson() {
 function exportCsv() {
   const headers = [
     "date", "pair", "direction", "status", "entryAttempt", "fvgStatus", "fvgFormed",
-    "hasSmt", "smtStrength", "smtPair", "poiSupported", "poiSupportType", "thirdCandle",
+    "dayBias", "hasSmt", "smtStrength", "smtPair", "poiSupported", "poiSupportType", "thirdCandle",
     "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
       ...trade,
+      dayBias: trade.htfAnalysis?.dayBias,
       hasSmt: trade.htfAnalysis?.hasSmt,
       smtStrength: trade.htfAnalysis?.smtStrength,
       smtPair: trade.htfAnalysis?.smtPair,
@@ -2507,6 +2563,7 @@ function bindEvents() {
   elements.addPoiMitigationOptionBtn.addEventListener("click", () => addCustomOption("poiMitigation"));
   elements.addEntryLevelOptionBtn.addEventListener("click", () => addCustomOption("entryLevel"));
 
+  bindChartUi("day");
   bindChartUi("htf");
   bindChartUi("ltf");
 

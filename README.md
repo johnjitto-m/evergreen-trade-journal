@@ -7,10 +7,10 @@ A static HTML/CSS/JavaScript trading journal with an isolated Supabase backend. 
 - Responsive Evergreen dashboard and full research database
 - Weekly dashboard ordered Monday to Sunday, with newly added trades placed at the bottom of their day
 - Basic Info → HTF Analysis → LTF Analysis trade workflow
-- HTF “FVG mitigation or sweep?” tracking; Sweep auto-selects Spartan CISD on LTF
+- HTF Day Bias (Buy/Sell) plus “FVG mitigation or sweep?” tracking; Sweep auto-selects Spartan CISD on LTF
 - Clean HTF CISD question with conditional Inside FVG / Outside FVG selection
 - LTF answers are optional, so incomplete trades can be saved and completed later through Edit
-- TradingView snapshot previews and separate HTF/LTF reference links
+- TradingView snapshot previews with separate Day time-frame, HTF, and LTF reference links
 - Default HTF **1H**, automatic LTF **5m**, and editable **$50** risk
 - JSON backup/import and CSV export
 - Email magic-link sign-in through Supabase Auth
@@ -174,3 +174,12 @@ The View Trade screen now opens as a centered 1400px maximum-width popup instead
 - The weekly dashboard now shows Premium / Discount beside Direction instead of Status.
 - New trades offer only Took Trade and Not Taken.
 - Older Missed Trade records are treated as Not Taken when edited.
+
+
+## Day time-frame chart and bias update (v23)
+
+- The HTF Analysis page now starts with a dedicated **Day Time Frame Chart** link and preview panel.
+- The original HTF chart panel appears directly below it.
+- A new required **Day bias?** question records **Buy** or **Sell**.
+- Day Bias is included in Trade Review, research search/filtering, strategy similarities, edge statistics, JSON backups, and CSV exports.
+- Day chart links are stored inside the existing `htf_analysis` JSON field, so no Supabase SQL migration is required.
