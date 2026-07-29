@@ -25,7 +25,7 @@ A static HTML/CSS/JavaScript trading journal with an isolated Supabase backend. 
 - Responsive Evergreen dashboard and full research database
 - Weekly dashboard ordered Monday to Sunday, with newly added trades placed at the bottom of their day
 - Basic Info → HTF Analysis → LTF Analysis trade workflow
-- HTF Day Bias (Buy/Sell) plus “FVG mitigation or sweep?” tracking; Sweep auto-selects Spartan CISD on LTF
+- HTF Day Bias (Buy/Sell) plus “FVG mitigation or sweep?” tracking; Sweep auto-selects CISD on LTF
 - Clean HTF CISD question with conditional Inside FVG / Outside FVG selection
 - LTF answers are optional, so incomplete trades can be saved and completed later through Edit
 - LTF trade comments use a multi-select dropdown with reusable custom options
@@ -161,7 +161,7 @@ JWT secret
 
 ## Entry-level multi-select update
 
-The LTF question **Which entry level was used?** now supports selecting multiple entry levels. Existing trades that stored one entry level remain compatible. If HTF FVG interaction is set to **Sweep**, **Spartan CISD** is automatically added without removing any other selected entry level.
+The LTF entry option is a single choice between CISD and BREAKER BLOCK. Existing Spartan CISD and BB values are migrated to the new labels. If HTF FVG interaction is set to **Sweep**, **CISD** is automatically selected.
 
 ## Weekly table alignment fix
 
@@ -228,3 +228,10 @@ The View Trade screen now opens as a centered 1400px maximum-width popup instead
 - HTF duplicate chart-panel outline is removed.
 - HTF analysis answers are optional and browser required-choice popovers are disabled.
 - Wizard workflow stays bottom-left and navigation actions stay bottom-right.
+
+
+## v33
+
+- Replaced Day Bias Setups with split multi-select Pros and Cons dropdowns.
+- Added HTF Question 8: HTF POI backed by?
+- Added research, review, export, and cloud-option support for the new fields.

@@ -47,12 +47,26 @@ alter table public.evergreen_trades add column if not exists ltf_image_path text
 create table if not exists public.evergreen_journal_options (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  category text not null check (category in ('htf_poi_mitigation', 'ltf_entry_level')),
+  category text not null,
   label text not null check (char_length(label) between 1 and 80),
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   unique (user_id, category, label)
 );
+
+-- Keep the allowed custom-option categories aligned with the journal UI.
+-- Dropping first makes this migration safe for existing installations and reruns.
+alter table public.evergreen_journal_options
+drop constraint if exists evergreen_journal_options_category_check;
+
+alter table public.evergreen_journal_options
+add constraint evergreen_journal_options_category_check
+check (category in (
+  'day_bias_factor',
+  'htf_poi_mitigation',
+  'htf_poi_backing',
+  'ltf_trade_comment'
+));
 
 alter table public.evergreen_trades enable row level security;
 alter table public.evergreen_journal_options enable row level security;
