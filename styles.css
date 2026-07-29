@@ -3187,3 +3187,2066 @@ button.review-chart-media {
     min-height: 190px;
   }
 }
+
+/* ================================================================
+   Unified Add Trade dialog sizing — v24
+   Basic, HTF and LTF use the same desktop popup footprint.
+   ================================================================ */
+:root {
+  --trade-dialog-width: 1280px;
+  --trade-dialog-height: 760px;
+}
+
+#tradeModal .trade-modal,
+#tradeModal .trade-modal.analysis-mode {
+  width: min(var(--trade-dialog-width), calc(100vw - 28px));
+  height: min(var(--trade-dialog-height), calc(100dvh - 28px));
+  max-height: calc(100dvh - 28px);
+  margin: 0;
+  padding: 16px;
+}
+
+#tradeModal .modal-topline {
+  min-height: 52px;
+  padding-bottom: 10px;
+}
+
+#tradeModal .step-tabs {
+  margin: 10px 0;
+}
+
+#tradeModal .wizard-step {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Basic page: compact, balanced and scroll-free at desktop sizes. */
+#basicTradeForm {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+#basicTradeForm .form-section {
+  padding: 13px;
+}
+
+#basicTradeForm .form-grid {
+  gap: 9px;
+  margin-top: 8px;
+}
+
+#basicTradeForm label > span {
+  margin-bottom: 5px;
+  font-size: 0.76rem;
+}
+
+#basicTradeForm input,
+#basicTradeForm select {
+  min-height: 39px;
+  border-radius: 10px;
+}
+
+#basicTradeForm .question-grid {
+  flex: 1 1 auto;
+  gap: 9px;
+  margin-top: 9px;
+}
+
+#basicTradeForm .choice-section {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  padding: 11px 12px;
+}
+
+#basicTradeForm .question {
+  margin: 4px 0 8px;
+  font-size: 0.88rem;
+}
+
+#basicTradeForm .choice-grid {
+  flex: 1 1 auto;
+  gap: 7px;
+}
+
+#basicTradeForm .choice-card {
+  min-height: 58px;
+  padding: 9px 11px;
+}
+
+#basicTradeForm .choice-card strong {
+  margin-bottom: 3px;
+  font-size: 0.84rem;
+}
+
+#basicTradeForm .choice-card small {
+  font-size: 0.70rem;
+  line-height: 1.25;
+}
+
+#basicTradeForm .form-footer {
+  flex: 0 0 auto;
+  margin-top: 9px;
+}
+
+/* Analysis pages: two-column question grids use the available width. */
+#tradeModal .analysis-layout {
+  height: 100%;
+  grid-template-columns: minmax(360px, 0.82fr) minmax(0, 1.58fr);
+  gap: 11px;
+}
+
+#tradeModal .analysis-questions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+}
+
+#tradeModal .analysis-question-card {
+  min-height: 0;
+  padding: 10px 11px;
+  border-radius: 14px;
+}
+
+#tradeModal .analysis-question {
+  margin: 3px 0 7px;
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+#tradeModal .analysis-hint,
+#tradeModal .conditional-title {
+  margin: -1px 0 7px;
+  font-size: 0.70rem;
+  line-height: 1.28;
+}
+
+#tradeModal .analysis-question-card .choice-grid {
+  gap: 6px;
+}
+
+#tradeModal .analysis-question-card .choice-card,
+#tradeModal .compact-choices .choice-card {
+  min-height: 44px;
+  padding: 7px 9px;
+  border-radius: 11px;
+}
+
+#tradeModal .analysis-question-card .choice-card:has(small),
+#tradeModal .compact-choices .choice-card:has(small) {
+  min-height: 54px;
+}
+
+#tradeModal .analysis-question-card .choice-card strong {
+  margin-bottom: 1px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+#tradeModal .analysis-question-card .choice-card small {
+  font-size: 0.66rem;
+  line-height: 1.22;
+}
+
+#tradeModal .conditional-panel {
+  margin-top: 7px;
+  padding: 8px;
+  border-radius: 11px;
+}
+
+#tradeModal .add-option-button {
+  min-height: 32px;
+  margin-top: 7px;
+  padding-inline: 12px;
+  font-size: 0.76rem;
+}
+
+#tradeModal .number-field {
+  max-width: none;
+}
+
+#tradeModal .number-field span {
+  margin-bottom: 5px;
+  font-size: 0.72rem;
+}
+
+#tradeModal .number-field input {
+  min-height: 38px;
+}
+
+#tradeModal .outcome-fields {
+  gap: 7px;
+  margin-top: 7px;
+}
+
+#tradeModal .calculated-pnl {
+  min-height: 56px;
+  padding: 7px 10px;
+}
+
+#tradeModal .analysis-footer {
+  position: static;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 7px 0 0;
+  border-top: 1px solid rgba(76, 96, 126, 0.24);
+  background: transparent;
+}
+
+/* Compact chart references so Day + HTF and all three LTF links fit. */
+#tradeModal .chart-column {
+  padding: 11px;
+  overflow-y: auto;
+}
+
+#tradeModal .chart-column-multi {
+  display: grid;
+  grid-template-rows: minmax(0, 0.94fr) minmax(0, 1.06fr);
+  gap: 9px;
+  overflow: hidden;
+}
+
+#tradeModal .chart-reference-section {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  padding: 9px 10px;
+  overflow-y: auto;
+  border-radius: 13px;
+}
+
+#tradeModal .chart-column-heading h3,
+#tradeModal .chart-links-heading h3 {
+  font-size: 0.88rem;
+}
+
+#tradeModal .chart-dropzone,
+#tradeModal .chart-column-multi .compact-chart-dropzone {
+  min-height: 118px;
+  max-height: 145px;
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 13px;
+}
+
+#tradeModal #ltfStep .chart-dropzone {
+  min-height: 135px;
+  max-height: 155px;
+}
+
+#tradeModal .chart-dropzone p {
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+#tradeModal .chart-link-list,
+#tradeModal .chart-column-multi .chart-link-list {
+  gap: 6px;
+  margin: 6px 0;
+}
+
+#tradeModal .chart-link-card {
+  padding: 7px 8px;
+  border-radius: 11px;
+}
+
+#tradeModal .chart-link-fields {
+  grid-template-columns: minmax(112px, 0.9fr) minmax(150px, 1.35fr);
+  gap: 7px;
+}
+
+#tradeModal .chart-link-fields label > span {
+  margin-bottom: 3px;
+  font-size: 0.68rem;
+}
+
+#tradeModal .chart-link-fields input {
+  min-height: 34px;
+  padding-inline: 9px;
+  border-radius: 9px;
+  font-size: 0.75rem;
+}
+
+#tradeModal .chart-link-actions {
+  gap: 5px;
+  margin-top: 5px;
+}
+
+#tradeModal .link-action {
+  min-height: 27px;
+  padding: 0 9px;
+  font-size: 0.70rem;
+}
+
+#tradeModal .chart-help {
+  margin: 5px 0 0;
+  font-size: 0.66rem;
+  line-height: 1.3;
+}
+
+#tradeModal .upload-button,
+#tradeModal .active-snapshot-button {
+  min-height: 34px;
+  margin-top: 6px;
+  font-size: 0.72rem;
+}
+
+#tradeModal .btn-compact {
+  min-height: 31px;
+  padding: 0 11px;
+  font-size: 0.74rem;
+}
+
+/* Small screens still switch to a safe, scrollable one-column layout. */
+@media (max-width: 1020px) {
+  #tradeModal .trade-modal,
+  #tradeModal .trade-modal.analysis-mode {
+    width: calc(100vw - 18px);
+    height: calc(100dvh - 18px);
+    max-height: calc(100dvh - 18px);
+    padding: 14px;
+  }
+
+  #tradeModal .wizard-step {
+    overflow-y: auto;
+  }
+
+  #tradeModal .analysis-layout {
+    display: block;
+    height: auto;
+  }
+
+  #tradeModal .analysis-questions {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  #tradeModal .chart-column-multi {
+    display: flex;
+    overflow: visible;
+  }
+
+  #tradeModal .chart-reference-section,
+  #tradeModal .chart-column {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  #basicTradeForm .question-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #basicTradeForm {
+    height: auto;
+  }
+}
+
+/* Final fit tuning after local dialog checks. */
+:root {
+  --trade-dialog-height: 820px;
+}
+
+#tradeModal .analysis-question-card {
+  min-height: min-content;
+}
+
+#tradeModal #ltfStep .chart-dropzone {
+  min-height: 124px;
+  max-height: 140px;
+}
+
+@media (max-height: 780px) and (min-width: 1021px) {
+  #tradeModal .analysis-questions {
+    gap: 6px;
+  }
+
+  #tradeModal .analysis-question-card {
+    padding: 8px 9px;
+  }
+
+  #tradeModal .analysis-question-card .choice-card,
+  #tradeModal .compact-choices .choice-card {
+    min-height: 40px;
+    padding: 6px 8px;
+  }
+
+  #tradeModal .analysis-question-card .choice-card:has(small),
+  #tradeModal .compact-choices .choice-card:has(small) {
+    min-height: 48px;
+  }
+
+  #tradeModal .analysis-hint,
+  #tradeModal .conditional-title {
+    margin-bottom: 5px;
+  }
+
+  #tradeModal .analysis-footer {
+    padding-top: 5px;
+  }
+
+  #tradeModal .chart-reference-section {
+    padding: 7px 8px;
+  }
+
+  #tradeModal .chart-dropzone,
+  #tradeModal .chart-column-multi .compact-chart-dropzone,
+  #tradeModal #ltfStep .chart-dropzone {
+    min-height: 105px;
+    max-height: 120px;
+  }
+
+  #tradeModal .chart-link-card {
+    padding: 5px 7px;
+  }
+
+  #tradeModal .chart-link-list,
+  #tradeModal .chart-column-multi .chart-link-list {
+    gap: 5px;
+    margin: 5px 0;
+  }
+}
+
+
+/* ================================================================
+   Basic + Day Analysis merge — v25
+   Keeps the preferred 1600×900 dialog while redistributing content.
+   ================================================================ */
+:root {
+  --trade-dialog-width: 1600px;
+  --trade-dialog-height: 900px;
+}
+
+#tradeModal .trade-modal,
+#tradeModal .trade-modal.analysis-mode {
+  width: min(var(--trade-dialog-width), calc(100vw - 18px));
+  height: min(var(--trade-dialog-height), calc(100dvh - 18px));
+  max-height: calc(100dvh - 18px);
+  padding: 18px;
+}
+
+#basicTradeForm .basic-workspace {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: minmax(350px, 0.72fr) minmax(0, 1.78fr);
+  gap: 11px;
+  margin-top: 10px;
+}
+
+#basicTradeForm .basic-day-column,
+#basicTradeForm .basic-question-column {
+  min-width: 0;
+  min-height: 0;
+}
+
+#basicTradeForm .basic-day-column {
+  display: flex;
+}
+
+#basicTradeForm .basic-day-panel {
+  width: 100%;
+  height: 100%;
+  padding: 11px 12px;
+  overflow-y: auto;
+}
+
+#basicTradeForm .basic-day-panel .compact-chart-dropzone {
+  min-height: 155px;
+  max-height: 190px;
+}
+
+#basicTradeForm .basic-day-panel .chart-link-list {
+  max-height: 132px;
+  overflow-y: auto;
+}
+
+#basicTradeForm .basic-question-grid {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+}
+
+#basicTradeForm .basic-question-grid .choice-section {
+  min-height: 0;
+  padding: 10px 11px;
+}
+
+#basicTradeForm .basic-question-grid .choice-card {
+  min-height: 46px;
+  padding: 7px 9px;
+}
+
+#basicTradeForm .day-bias-choice-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#basicTradeForm .day-bias-setup-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+#basicTradeForm .day-bias-setup-options .choice-card {
+  min-height: 38px;
+}
+
+#basicTradeForm .basic-day-setup-question .analysis-hint {
+  margin: -2px 0 6px;
+  font-size: 0.68rem;
+}
+
+#basicTradeForm .basic-day-setup-question .add-option-button {
+  min-height: 29px;
+  margin-top: 6px;
+  padding: 0 11px;
+  font-size: 0.72rem;
+}
+
+#tradeModal #htfStep .analysis-layout {
+  grid-template-columns: minmax(400px, 0.92fr) minmax(0, 1.68fr);
+}
+
+#tradeModal #htfStep .chart-column-single {
+  padding: 0;
+  overflow: hidden;
+}
+
+#tradeModal #htfStep .chart-column-single .chart-reference-section {
+  height: 100%;
+  overflow-y: auto;
+}
+
+#tradeModal #htfStep .chart-column-single .chart-dropzone {
+  min-height: 210px;
+  max-height: 280px;
+}
+
+@media (max-height: 850px) and (min-width: 1021px) {
+  #basicTradeForm .basic-day-panel .compact-chart-dropzone {
+    min-height: 125px;
+    max-height: 150px;
+  }
+
+  #basicTradeForm .basic-question-grid {
+    gap: 7px;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-section {
+    padding: 8px 9px;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-card {
+    min-height: 40px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 1020px) {
+  #basicTradeForm .basic-workspace {
+    display: block;
+    height: auto;
+  }
+
+  #basicTradeForm .basic-day-column {
+    margin-bottom: 10px;
+  }
+
+  #basicTradeForm .basic-question-grid {
+    height: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  #basicTradeForm .day-bias-choice-grid,
+  #basicTradeForm .day-bias-setup-options {
+    grid-template-columns: 1fr;
+  }
+
+  #tradeModal #htfStep .chart-column-single {
+    overflow: visible;
+  }
+}
+
+/* Basic page fit correction: preserve both Basic Details rows and compact the six decision cards. */
+#basicTradeForm .form-section {
+  flex: 0 0 auto;
+  min-height: 176px;
+}
+
+#basicTradeForm .basic-question-grid {
+  overflow: hidden;
+}
+
+#basicTradeForm .basic-question-grid .choice-section {
+  justify-content: flex-start;
+}
+
+#basicTradeForm .basic-question-grid .question {
+  margin: 2px 0 5px;
+  font-size: 0.80rem;
+}
+
+#basicTradeForm .basic-question-grid .choice-grid {
+  flex: 0 0 auto;
+  gap: 5px;
+}
+
+#basicTradeForm .basic-question-grid .choice-card,
+#basicTradeForm .day-bias-setup-options .choice-card {
+  min-height: 38px;
+  padding: 6px 8px;
+}
+
+#basicTradeForm .basic-question-grid .choice-card strong {
+  margin-bottom: 1px;
+  font-size: 0.77rem;
+}
+
+#basicTradeForm .basic-question-grid .choice-card small {
+  font-size: 0.63rem;
+  line-height: 1.15;
+}
+
+#basicTradeForm .basic-day-setup-question .analysis-hint {
+  margin-bottom: 4px;
+  font-size: 0.64rem;
+}
+
+#basicTradeForm .basic-day-setup-question .add-option-button {
+  min-height: 27px;
+  margin-top: 4px;
+}
+
+@media (max-height: 850px) and (min-width: 1021px) {
+  #basicStep {
+    overflow-y: auto;
+  }
+
+  #basicTradeForm {
+    height: auto;
+    min-height: 100%;
+  }
+
+  #basicTradeForm .basic-workspace {
+    min-height: 430px;
+  }
+}
+
+@media (min-width: 1450px) {
+  #basicTradeForm .day-bias-setup-options {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  #basicTradeForm .day-bias-setup-options .choice-card {
+    min-height: 36px;
+    padding-inline: 7px;
+  }
+}
+
+/* ================================================================
+   Equal-column dialog alignment — v26
+   Uses a shared three-column rhythm across Basic, HTF and LTF pages.
+   ================================================================ */
+@media (min-width: 1021px) {
+  /* Basic Details, Day Chart and every decision card follow the same thirds. */
+  #basicTradeForm .form-grid.basic-grid {
+    gap: 12px;
+  }
+
+  #basicTradeForm .basic-workspace {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding-inline: 13px;
+  }
+
+  #basicTradeForm .basic-day-column {
+    grid-column: 1;
+  }
+
+  #basicTradeForm .basic-question-column {
+    grid-column: 2 / span 2;
+  }
+
+  #basicTradeForm .basic-question-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-section,
+  #basicTradeForm .basic-day-panel {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* HTF and LTF both use one chart column plus two equal question columns. */
+  #tradeModal #htfStep .analysis-layout,
+  #tradeModal #ltfStep .analysis-layout {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  #tradeModal #htfStep .chart-column,
+  #tradeModal #ltfStep .chart-column {
+    grid-column: 1;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  #tradeModal #htfStep .analysis-questions,
+  #tradeModal #ltfStep .analysis-questions {
+    grid-column: 2 / span 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding-right: 0;
+    align-items: stretch;
+  }
+
+  #tradeModal #htfStep .analysis-question-card,
+  #tradeModal #ltfStep .analysis-question-card {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* The option-heavy HTF behaviour question uses the complete final row. */
+  #tradeModal #htfQuestions > .analysis-question-card:last-of-type {
+    grid-column: 1 / -1;
+  }
+
+  #tradeModal #htfQuestions > .analysis-question-card:last-of-type .choice-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1021px) and (max-width: 1250px) {
+  #tradeModal #htfQuestions > .analysis-question-card:last-of-type .choice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* ================================================================
+   Professional compact dialog spacing — v27
+   Removes stretched card interiors after helper descriptions were removed.
+   ================================================================ */
+@media (min-width: 1021px) {
+  /* Keep the preferred large dialog, but let the content define card height. */
+  #tradeModal .wizard-step,
+  #tradeModal form {
+    min-height: 0;
+  }
+
+  /* Basic page: compact rows, no artificial stretching. */
+  #basicTradeForm .basic-workspace {
+    flex: 0 0 auto;
+    align-items: start;
+    margin-top: 10px;
+  }
+
+  #basicTradeForm .basic-day-column,
+  #basicTradeForm .basic-question-column {
+    align-self: start;
+  }
+
+  #basicTradeForm .basic-day-panel {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 12px;
+  }
+
+  #basicTradeForm .basic-day-panel .compact-chart-dropzone {
+    min-height: 132px;
+    max-height: 150px;
+  }
+
+  #basicTradeForm .basic-day-panel .chart-link-list {
+    max-height: 104px;
+  }
+
+  #basicTradeForm .basic-question-grid {
+    height: auto;
+    min-height: 0;
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+    align-content: start;
+    align-items: start;
+    overflow: visible;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-section {
+    height: auto;
+    min-height: 0;
+    justify-content: flex-start;
+    padding: 10px 11px;
+  }
+
+  #basicTradeForm .basic-question-grid .question {
+    margin: 2px 0 7px;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-grid {
+    flex: 0 0 auto;
+    align-items: stretch;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-card,
+  #basicTradeForm .day-bias-setup-options .choice-card {
+    min-height: 42px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    padding: 9px 10px;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-card strong,
+  #basicTradeForm .day-bias-setup-options .choice-card strong {
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  #basicTradeForm .basic-day-setup-question .add-option-button {
+    min-height: 32px;
+    margin-top: 7px;
+  }
+
+  #basicTradeForm .form-footer {
+    margin-top: 10px;
+  }
+
+  /* Analysis pages: content-height cards with a tight, consistent rhythm. */
+  #tradeModal #htfStep .analysis-questions,
+  #tradeModal #ltfStep .analysis-questions {
+    grid-auto-rows: auto;
+    align-content: start;
+    align-items: start;
+    gap: 10px 12px;
+  }
+
+  #tradeModal #htfStep .analysis-question-card,
+  #tradeModal #ltfStep .analysis-question-card {
+    height: auto;
+    min-height: 0;
+    align-self: start;
+    padding: 11px 12px;
+  }
+
+  #tradeModal .analysis-question {
+    margin: 2px 0 8px;
+  }
+
+  #tradeModal .analysis-question-card .choice-card,
+  #tradeModal .compact-choices .choice-card {
+    min-height: 42px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    padding: 9px 10px;
+  }
+
+  #tradeModal .analysis-question-card .choice-card strong,
+  #tradeModal .compact-choices .choice-card strong {
+    margin: 0;
+  }
+
+  #tradeModal .conditional-panel {
+    margin-top: 7px;
+    padding: 8px;
+  }
+
+  #tradeModal .analysis-footer {
+    margin-top: 10px;
+  }
+
+  /* Clean form presentation: remove instruction-only helper copy. */
+  #tradeModal .analysis-hint,
+  #tradeModal .chart-help {
+    display: none;
+  }
+
+  #tradeModal .active-snapshot-button,
+  #tradeModal .upload-button {
+    margin-top: 7px;
+  }
+}
+
+/* Keep compact cards readable on shorter laptop screens. */
+@media (min-width: 1021px) and (max-height: 820px) {
+  #basicTradeForm .basic-day-panel .compact-chart-dropzone {
+    min-height: 112px;
+    max-height: 128px;
+  }
+
+  #basicTradeForm .basic-question-grid,
+  #tradeModal #htfStep .analysis-questions,
+  #tradeModal #ltfStep .analysis-questions {
+    gap: 8px;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-section,
+  #tradeModal #htfStep .analysis-question-card,
+  #tradeModal #ltfStep .analysis-question-card {
+    padding: 8px 9px;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-card,
+  #basicTradeForm .day-bias-setup-options .choice-card,
+  #tradeModal .analysis-question-card .choice-card,
+  #tradeModal .compact-choices .choice-card {
+    min-height: 38px;
+    padding: 7px 8px;
+  }
+}
+
+/* ================================================================
+   Visual trade blueprint dock + instrument identity — v28
+   Uses the lower dialog space for a live, useful trade summary.
+   ================================================================ */
+#tradeModal .pair-field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#tradeModal .pair-field-icon {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border: 1px solid rgba(92, 255, 170, 0.24);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+}
+
+/* Give every selected answer a clear visual confirmation. */
+#tradeModal .choice-card {
+  position: relative;
+}
+
+#tradeModal .choice-card.selected {
+  padding-right: 38px !important;
+}
+
+#tradeModal .choice-card.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: grid;
+  width: 21px;
+  height: 21px;
+  place-items: center;
+  border: 1px solid rgba(122, 255, 184, 0.52);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #35e78a, #12b760);
+  color: #02150b;
+  font-size: 0.79rem;
+  font-weight: 1000;
+  line-height: 1;
+  box-shadow: 0 4px 14px rgba(20, 218, 113, 0.25);
+  transform: translateY(-50%);
+}
+
+#tradeModal .trade-blueprint {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: minmax(245px, 0.82fr) minmax(520px, 2fr) minmax(220px, 0.78fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 98px;
+  margin-top: auto;
+  padding: 12px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(54, 225, 132, 0.27);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 4% 50%, rgba(35, 218, 125, 0.18), transparent 28%),
+    radial-gradient(circle at 94% 24%, rgba(65, 122, 255, 0.17), transparent 32%),
+    linear-gradient(135deg, rgba(10, 31, 40, 0.96), rgba(9, 20, 37, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 15px 32px rgba(0, 0, 0, 0.16);
+}
+
+#tradeModal .trade-blueprint::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(78, 119, 149, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(78, 119, 149, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+}
+
+#tradeModal .blueprint-instrument,
+#tradeModal .blueprint-metrics,
+#tradeModal .blueprint-route {
+  position: relative;
+  z-index: 1;
+}
+
+#tradeModal .blueprint-instrument {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 11px;
+}
+
+#tradeModal .blueprint-logo {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  border: 1px solid rgba(116, 245, 175, 0.24);
+  border-radius: 17px;
+  background: #071321;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
+#tradeModal .blueprint-instrument-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+#tradeModal .blueprint-kicker {
+  color: #36e68c;
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.13em;
+}
+
+#tradeModal .blueprint-instrument-copy strong {
+  overflow: hidden;
+  color: #f2f7ff;
+  font-size: 1.1rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tradeModal .blueprint-name {
+  overflow: hidden;
+  color: #8fa0b9;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tradeModal .blueprint-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+#tradeModal .blueprint-metrics article {
+  display: grid;
+  min-width: 0;
+  min-height: 56px;
+  align-content: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid rgba(72, 96, 129, 0.44);
+  border-radius: 11px;
+  background: rgba(17, 31, 51, 0.76);
+}
+
+#tradeModal .blueprint-metrics article span {
+  color: #8496ae;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+#tradeModal .blueprint-metrics article strong {
+  overflow: hidden;
+  color: #eaf1fb;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tradeModal .blueprint-route {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  gap: 7px;
+}
+
+#tradeModal .blueprint-route span {
+  display: inline-grid;
+  min-height: 30px;
+  place-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(67, 90, 123, 0.56);
+  border-radius: 999px;
+  background: rgba(16, 30, 49, 0.82);
+  color: #8e9db2;
+  font-size: 0.67rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+#tradeModal .blueprint-route span.active {
+  border-color: rgba(49, 230, 139, 0.55);
+  background: rgba(7, 67, 45, 0.92);
+  color: #a9ffd0;
+  box-shadow: 0 0 0 2px rgba(47, 226, 136, 0.06);
+}
+
+#tradeModal .blueprint-route i {
+  width: 16px;
+  height: 1px;
+  flex: 0 1 16px;
+  background: linear-gradient(90deg, rgba(61, 218, 135, 0.72), rgba(70, 106, 159, 0.42));
+}
+
+#tradeModal #basicTradeForm,
+#tradeModal #htfAnalysisForm,
+#tradeModal #ltfAnalysisForm {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+#tradeModal #htfStep .analysis-layout,
+#tradeModal #ltfStep .analysis-layout {
+  height: auto;
+  flex: 1 1 auto;
+}
+
+#tradeModal #basicTradeForm .trade-blueprint,
+#tradeModal #htfAnalysisForm .trade-blueprint,
+#tradeModal #ltfAnalysisForm .trade-blueprint {
+  margin-top: 10px;
+}
+
+#tradeModal .form-footer,
+#tradeModal .analysis-footer {
+  flex: 0 0 auto;
+  margin-top: 8px;
+}
+
+/* Direction and outcome subtly change the live dock accent. */
+#tradeModal .trade-blueprint[data-direction="long"] {
+  border-color: rgba(48, 230, 139, 0.36);
+}
+
+#tradeModal .trade-blueprint[data-direction="short"] {
+  border-color: rgba(255, 107, 120, 0.30);
+  background:
+    radial-gradient(circle at 4% 50%, rgba(255, 91, 109, 0.12), transparent 28%),
+    radial-gradient(circle at 94% 24%, rgba(65, 122, 255, 0.15), transparent 32%),
+    linear-gradient(135deg, rgba(30, 23, 35, 0.96), rgba(9, 20, 37, 0.98));
+}
+
+@media (max-width: 1280px) and (min-width: 1021px) {
+  #tradeModal .trade-blueprint {
+    grid-template-columns: 225px minmax(0, 1fr);
+  }
+
+  #tradeModal .blueprint-route {
+    display: none;
+  }
+}
+
+@media (max-height: 780px) and (min-width: 1021px) {
+  #tradeModal .trade-blueprint {
+    min-height: 76px;
+    padding-block: 8px;
+  }
+
+  #tradeModal .blueprint-logo {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+
+  #tradeModal .blueprint-metrics article {
+    min-height: 46px;
+    padding-block: 6px;
+  }
+}
+
+@media (max-width: 1020px) {
+  #tradeModal .trade-blueprint {
+    grid-template-columns: 1fr;
+    margin-top: 10px;
+  }
+
+  #tradeModal .blueprint-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #tradeModal .blueprint-route {
+    justify-content: flex-start;
+  }
+}
+
+
+/* ================================================================
+   Compact workflow footer + Day Bias Reason — v29
+   ================================================================ */
+#tradeModal .trade-blueprint {
+  display: none !important;
+}
+
+#tradeModal #basicTradeForm,
+#tradeModal #htfAnalysisForm,
+#tradeModal #ltfAnalysisForm {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+#tradeModal .wizard-footer {
+  width: 100%;
+  min-height: 64px;
+  flex: 0 0 64px;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto !important;
+  padding: 10px 0 0;
+  border-top: 1px solid rgba(76, 96, 126, 0.26);
+}
+
+#tradeModal .footer-step-route {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  min-width: max-content;
+}
+
+#tradeModal .footer-step-route span {
+  display: inline-grid;
+  min-height: 31px;
+  place-items: center;
+  padding: 0 11px;
+  border: 1px solid rgba(67, 90, 123, 0.56);
+  border-radius: 999px;
+  background: rgba(16, 30, 49, 0.82);
+  color: #8e9db2;
+  font-size: 0.68rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+#tradeModal .footer-step-route span.active {
+  border-color: rgba(49, 230, 139, 0.58);
+  background: rgba(7, 67, 45, 0.92);
+  color: #a9ffd0;
+  box-shadow: 0 0 0 2px rgba(47, 226, 136, 0.06);
+}
+
+#tradeModal .footer-step-route i {
+  width: 17px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(61, 218, 135, 0.72), rgba(70, 106, 159, 0.42));
+}
+
+#tradeModal .footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+#tradeModal .wizard-footer .form-message {
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+}
+
+#tradeModal .wizard-footer .form-message:empty {
+  display: block;
+}
+
+#tradeModal .wizard-footer .btn-primary {
+  min-width: 215px;
+}
+
+#basicTradeForm .basic-day-reason-question {
+  grid-column: 1 / -1;
+}
+
+#basicTradeForm .day-bias-reason-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#basicTradeForm .basic-question-grid {
+  grid-auto-rows: auto !important;
+  align-content: start !important;
+}
+
+#basicTradeForm .basic-day-reason-question .add-option-button {
+  width: max-content;
+  min-width: 138px;
+  margin-top: 7px;
+}
+
+@media (max-width: 1020px) {
+  #tradeModal .wizard-footer {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    flex-basis: auto;
+  }
+
+  #tradeModal .footer-step-route,
+  #tradeModal .footer-actions {
+    justify-content: flex-start;
+  }
+
+  #basicTradeForm .day-bias-reason-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ================================================================
+   Final Add Trade layout consolidation — v30
+   Q1 + Q2 row, Q3 full-width row, Q4 full-width closing row.
+   Also carries forward the latest manual alignment and preview fixes.
+   ================================================================ */
+@media (min-width: 1021px) {
+  /* Keep each wizard page and its footer anchored consistently. */
+  #tradeModal #basicStep,
+  #tradeModal #htfStep,
+  #tradeModal #ltfStep,
+  #tradeModal #basicTradeForm,
+  #tradeModal #htfAnalysisForm,
+  #tradeModal #ltfAnalysisForm {
+    height: 100%;
+    min-height: 0;
+  }
+
+  #tradeModal #basicTradeForm,
+  #tradeModal #htfAnalysisForm,
+  #tradeModal #ltfAnalysisForm {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #tradeModal .wizard-footer {
+    margin-top: auto !important;
+  }
+
+  #tradeModal .wizard-footer .form-message:empty {
+    visibility: hidden;
+  }
+
+  /* Basic page: left Day Chart fills the same vertical range as questions. */
+  #basicTradeForm .basic-workspace {
+    align-items: stretch !important;
+  }
+
+  #basicTradeForm .basic-day-column {
+    align-self: stretch !important;
+    display: flex;
+  }
+
+  #basicTradeForm .basic-day-panel {
+    display: flex;
+    width: 100%;
+    height: 100% !important;
+    min-height: 100% !important;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #basicTradeForm .basic-day-panel .compact-chart-dropzone {
+    min-height: 210px !important;
+    max-height: none !important;
+    flex: 1 1 auto;
+  }
+
+  #basicTradeForm .basic-day-panel .active-snapshot-button {
+    flex: 0 0 auto;
+    margin-top: 10px;
+  }
+
+  /* HTF: remove duplicate outer border and let the chart use empty space. */
+  #tradeModal #htfStep .chart-column-single {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #tradeModal #htfStep .chart-column-single .chart-reference-section {
+    display: flex;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0;
+    flex-direction: column;
+    border: 1px solid rgba(46, 218, 134, 0.55) !important;
+    border-radius: 15px !important;
+    box-shadow: inset 0 2px 0 rgba(46, 218, 134, 0.72);
+  }
+
+  #tradeModal #htfStep .chart-dropzone {
+    min-height: 290px !important;
+    max-height: none !important;
+    flex: 1 1 auto;
+  }
+
+  #tradeModal #htfStep .chart-links-section,
+  #tradeModal #htfStep .chart-link-list,
+  #tradeModal #htfStep .upload-button,
+  #tradeModal #htfStep .active-snapshot-button {
+    flex: 0 0 auto;
+  }
+
+  #tradeModal #htfStep .active-snapshot-button {
+    margin-top: 8px;
+  }
+
+  /* LTF left panel: enlarge preview while retaining three link cards. */
+  #tradeModal #ltfStep .chart-column {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  #tradeModal #ltfStep .chart-dropzone {
+    width: 100%;
+    height: 245px !important;
+    min-height: 245px !important;
+    max-height: 245px !important;
+    flex: 0 0 245px;
+  }
+
+  #tradeModal #ltfStep .chart-dropzone .dropzone-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* LTF question hierarchy:
+     row 1 = Q1 + Q2, row 2 = Q3 full width, row 3 = Q4 full width. */
+  #tradeModal #ltfQuestions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-rows: auto !important;
+    align-content: start !important;
+    align-items: stretch !important;
+    gap: 14px 12px !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card {
+    width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    align-self: stretch !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding: 16px !important;
+  }
+
+  /* Q3 answers use the full second row. */
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(3) .choice-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  /* Q4: outcome choices first, then larger risk/RR/P&L closing line. */
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .choice-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .choice-card {
+    min-height: 50px !important;
+    font-size: 0.92rem;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .outcome-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.35fr;
+    gap: 12px;
+    width: 100%;
+    margin-top: 14px !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .number-field input {
+    min-height: 54px !important;
+    padding: 10px 14px;
+    font-size: 1.08rem;
+    font-weight: 800;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .number-field span {
+    margin-bottom: 7px;
+    font-size: 0.76rem;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .calculated-pnl {
+    min-height: 78px !important;
+    padding: 12px 16px !important;
+    border-radius: 12px;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .calculated-pnl strong {
+    margin-top: 6px;
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Optional answers should never display stale error text in the footer. */
+#tradeModal #htfFormMessage,
+#tradeModal #ltfFormMessage {
+  min-height: 0;
+}
+
+
+/* ================================================================
+   Final unified wizard layout — v31
+   Equal footer/navigation placement on Basic, HTF and LTF.
+   Keeps the chart columns aligned without page-level scrolling.
+   ================================================================ */
+#tradeModal .pair-field-icon {
+  display: none !important;
+}
+
+@media (min-width: 1021px) {
+  /* All three pages use the same vertical structure. */
+  #tradeModal #basicStep,
+  #tradeModal #htfStep,
+  #tradeModal #ltfStep,
+  #tradeModal #basicTradeForm,
+  #tradeModal #htfAnalysisForm,
+  #tradeModal #ltfAnalysisForm {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  #tradeModal #basicTradeForm,
+  #tradeModal #htfAnalysisForm,
+  #tradeModal #ltfAnalysisForm {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* Identical footer grid and identical button dimensions on every page. */
+  #tradeModal .wizard-footer {
+    display: grid !important;
+    grid-template-columns: 210px minmax(0, 1fr) 450px !important;
+    align-items: center !important;
+    gap: 16px !important;
+    width: 100% !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    flex: 0 0 64px !important;
+    margin-top: auto !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid rgba(76, 96, 126, 0.26) !important;
+    background: #071323 !important;
+    position: relative !important;
+    z-index: 8 !important;
+  }
+
+  #tradeModal .footer-step-route {
+    width: 210px !important;
+    min-width: 210px !important;
+    justify-content: flex-start !important;
+  }
+
+  #tradeModal .wizard-footer .form-message {
+    min-width: 0 !important;
+    margin: 0 !important;
+    text-align: center !important;
+  }
+
+  #tradeModal .wizard-footer .form-message:empty {
+    display: block !important;
+    visibility: hidden !important;
+  }
+
+  #tradeModal .footer-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    width: 450px !important;
+    min-width: 450px !important;
+  }
+
+  #tradeModal .footer-actions .btn,
+  #tradeModal .footer-actions .btn-primary,
+  #tradeModal .footer-actions .btn-secondary {
+    width: 220px !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  /* BASIC: left Day Chart ends exactly with the Day Bias Reason row. */
+  #basicTradeForm .form-section {
+    flex: 0 0 auto !important;
+  }
+
+  #basicTradeForm .basic-workspace {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin-top: 10px !important;
+    padding-inline: 13px !important;
+    align-items: stretch !important;
+  }
+
+  #basicTradeForm .basic-day-column {
+    grid-column: 1 !important;
+    display: flex !important;
+    align-self: stretch !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  #basicTradeForm .basic-question-column {
+    grid-column: 2 / span 2 !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  #basicTradeForm .basic-question-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: auto !important;
+    gap: 9px 10px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    align-content: start !important;
+    align-items: stretch !important;
+    overflow: visible !important;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-section {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 9px 11px !important;
+  }
+
+  #basicTradeForm .basic-question-grid .choice-card {
+    min-height: 38px !important;
+    padding: 7px 10px !important;
+  }
+
+  #basicTradeForm .basic-day-reason-question {
+    grid-column: 1 / -1 !important;
+  }
+
+  #basicTradeForm .day-bias-reason-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  #basicTradeForm .basic-day-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 11px 12px !important;
+    overflow: hidden !important;
+  }
+
+  #basicTradeForm .basic-day-panel .compact-chart-dropzone {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 185px !important;
+    max-height: none !important;
+  }
+
+  #basicTradeForm .basic-day-panel .chart-link-list,
+  #basicTradeForm .basic-day-panel .active-snapshot-button {
+    flex: 0 0 auto !important;
+  }
+
+  /* HTF: one chart outline; questions and Q7 fill the available height. */
+  #tradeModal #htfStep .analysis-layout,
+  #tradeModal #ltfStep .analysis-layout {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #htfStep .chart-column-single {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #htfStep .chart-reference-section {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(46, 218, 134, 0.55) !important;
+    border-radius: 15px !important;
+    box-shadow: inset 0 2px 0 rgba(46, 218, 134, 0.72) !important;
+  }
+
+  #tradeModal #htfStep .chart-dropzone {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 290px !important;
+    max-height: none !important;
+  }
+
+  #tradeModal #htfQuestions {
+    display: grid !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto auto auto minmax(190px, 1fr) !important;
+    gap: 14px 12px !important;
+    align-content: stretch !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #htfQuestions > .analysis-question-card:nth-child(7) {
+    grid-column: 1 / -1 !important;
+    grid-row: 4 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 190px !important;
+    padding: 16px !important;
+  }
+
+  #tradeModal #htfQuestions > .analysis-question-card:nth-child(7) .choice-grid {
+    flex: 1 1 auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(58px, 1fr)) !important;
+    gap: 10px !important;
+    align-content: stretch !important;
+  }
+
+  #tradeModal #htfQuestions > .analysis-question-card:nth-child(7) .choice-card {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 58px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 12px !important;
+  }
+
+  /* LTF: complete left chart panel without an internal scrollbar. */
+  #tradeModal #ltfStep .chart-column {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding-right: 0 !important;
+    gap: 7px !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #ltfStep .chart-dropzone {
+    width: 100% !important;
+    height: 175px !important;
+    min-height: 175px !important;
+    max-height: 175px !important;
+    flex: 0 0 175px !important;
+  }
+
+  #tradeModal #ltfStep .chart-links-header,
+  #tradeModal #ltfStep .chart-links-heading {
+    margin: 3px 0 !important;
+  }
+
+  #tradeModal #ltfStep .chart-link-list {
+    display: grid !important;
+    flex: 0 0 auto !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  #tradeModal #ltfStep .chart-link-card {
+    padding: 6px 8px !important;
+    border-radius: 10px !important;
+  }
+
+  #tradeModal #ltfStep .chart-link-card input {
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 4px 8px !important;
+  }
+
+  #tradeModal #ltfStep .chart-link-card .link-actions {
+    gap: 5px !important;
+    margin-top: 4px !important;
+  }
+
+  #tradeModal #ltfStep .chart-link-card .link-actions button {
+    min-height: 26px !important;
+    padding: 3px 8px !important;
+  }
+
+  #tradeModal #ltfStep .upload-button,
+  #tradeModal #ltfStep .active-snapshot-button {
+    flex: 0 0 auto !important;
+    min-height: 31px !important;
+    margin-top: 1px !important;
+  }
+
+  /* LTF question rows and exact BE/Risk, SL/RR, TP/P&L alignment. */
+  #tradeModal #ltfQuestions {
+    display: grid !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-rows: auto !important;
+    gap: 14px 12px !important;
+    align-content: start !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(3) {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    padding: 16px !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(3) .choice-grid,
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .choice-grid,
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .outcome-fields {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .outcome-fields {
+    margin-top: 14px !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .choice-card,
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .number-field input,
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .calculated-pnl {
+    width: 100% !important;
+    min-height: 58px !important;
+    box-sizing: border-box !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .choice-card {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(4) .calculated-pnl {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 8px 14px !important;
+  }
+}
+
+
+/* =========================================================
+   v32 — LTF trade comments multi-select dropdown
+   ========================================================= */
+.multi-select-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.multi-select-dropdown > summary {
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--field);
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 800;
+  user-select: none;
+}
+
+.multi-select-dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+.multi-select-dropdown[open] > summary {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(34, 211, 128, 0.12);
+}
+
+.multi-select-chevron {
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.multi-select-dropdown[open] .multi-select-chevron {
+  transform: rotate(180deg);
+}
+
+.multi-select-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #0a1728;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+}
+
+.multi-select-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.multi-select-options .choice-card {
+  min-height: 42px !important;
+  padding: 8px 12px !important;
+}
+
+.multi-select-panel .add-option-button {
+  margin-top: 9px !important;
+}
+
+@media (min-width: 1021px) {
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(5) {
+    grid-column: 1 / -1 !important;
+    grid-row: 4 !important;
+    padding: 14px 16px !important;
+    overflow: visible !important;
+    position: relative;
+    z-index: 5;
+  }
+
+  #tradeModal #ltfQuestions {
+    grid-template-rows: auto auto auto auto !important;
+    gap: 11px 12px !important;
+    overflow: visible !important;
+  }
+
+  #tradeModal #ltfStep .analysis-layout {
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .multi-select-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Keep the added LTF comment visible in the read-only Trade Review layout. */
+.review-question-grid--ltf {
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1280px), (max-height: 790px) {
+  .review-question-grid--ltf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(100px, auto));
+  }
+}
+
+@media (max-width: 820px) {
+  .review-question-grid--ltf {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}
+/* Make the LTF chart preview slightly taller */
+@media (min-width: 1021px) {
+  #tradeModal #ltfStep .chart-dropzone {
+    height: 220px !important;
+    min-height: 220px !important;
+    max-height: 220px !important;
+    flex: 0 0 220px !important;
+  }
+}

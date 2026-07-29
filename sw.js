@@ -1,14 +1,21 @@
-const CACHE_NAME = "evergreen-trade-journal-v23";
+const CACHE_NAME = "evergreen-trade-journal-v32";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./styles.css?v=23",
-  "./supabase-config.js?v=23",
-  "./supabase-sync.js?v=23",
-  "./app.js?v=23",
+  "./styles.css?v=32",
+  "./supabase-config.js?v=32",
+  "./supabase-sync.js?v=32",
+  "./app.js?v=32",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./icons/instruments/eurusd.svg",
+  "./icons/instruments/gbpusd.svg",
+  "./icons/instruments/xauusd.svg",
+  "./icons/instruments/usdjpy.svg",
+  "./icons/instruments/gbpjpy.svg",
+  "./icons/instruments/nas100.svg",
+  "./icons/instruments/default.svg"
 ];
 
 self.addEventListener("install", (event) => {

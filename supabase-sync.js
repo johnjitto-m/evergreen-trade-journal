@@ -323,8 +323,11 @@
 
   async function syncOptions(optionLibrary) {
     const jobs = [];
+    for (const label of optionLibrary.dayBiasSetup || []) jobs.push(saveOption("day_bias_setup", label));
     for (const label of optionLibrary.poiMitigation || []) jobs.push(saveOption("htf_poi_mitigation", label));
     for (const label of optionLibrary.entryLevel || []) jobs.push(saveOption("ltf_entry_level", label));
+    for (const label of optionLibrary.tradeComments || []) jobs.push(saveOption("ltf_trade_comment", label));
+    for (const label of optionLibrary.dayBiasReason || []) jobs.push(saveOption("day_bias_reason", label));
     await Promise.all(jobs);
   }
 

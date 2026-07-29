@@ -1,3 +1,21 @@
+## v32 — LTF trade comments
+
+- Added LTF Question 5: **Comments about the trade**.
+- Multi-select dropdown includes **Good Trade** and **Went TP Without Triggering the Adjusted RR**.
+- Custom trade-comment options can be added and synced to Evergreen Supabase.
+- Trade comments are preserved in Edit, View Trade, research search/filtering, JSON backup, and CSV export.
+- No Supabase schema change is required because comments are stored inside the existing `ltf_analysis` JSON field.
+
+## v31 — Unified footer alignment and final wizard fit
+
+- Basic, HTF and LTF footers now use the same grid, route position and button sizes.
+- Day Chart panel ends with the Day Bias Reason row.
+- Added exclusive `None` option to Day Bias Reason.
+- Removed the pair instrument icon from Basic Info.
+- HTF Question 7 uses the remaining vertical space.
+- LTF chart references fit without an internal scrollbar.
+- LTF outcome columns align BE/Risk, SL/RR and TP/Calculated P/L.
+
 # Evergreen Trade Journal
 
 A static HTML/CSS/JavaScript trading journal with an isolated Supabase backend. It can run locally through VS Code Live Server and deploy directly to GitHub Pages.
@@ -10,6 +28,7 @@ A static HTML/CSS/JavaScript trading journal with an isolated Supabase backend. 
 - HTF Day Bias (Buy/Sell) plus “FVG mitigation or sweep?” tracking; Sweep auto-selects Spartan CISD on LTF
 - Clean HTF CISD question with conditional Inside FVG / Outside FVG selection
 - LTF answers are optional, so incomplete trades can be saved and completed later through Edit
+- LTF trade comments use a multi-select dropdown with reusable custom options
 - TradingView snapshot previews with separate Day time-frame, HTF, and LTF reference links
 - Default HTF **1H**, automatic LTF **5m**, and editable **$50** risk
 - JSON backup/import and CSV export
@@ -183,3 +202,29 @@ The View Trade screen now opens as a centered 1400px maximum-width popup instead
 - A new required **Day bias?** question records **Buy** or **Sell**.
 - Day Bias is included in Trade Review, research search/filtering, strategy similarities, edge statistics, JSON backups, and CSV exports.
 - Day chart links are stored inside the existing `htf_analysis` JSON field, so no Supabase SQL migration is required.
+
+## Unified Add Trade dialogs (v24)
+
+- Basic Info, HTF Analysis, and LTF Analysis now use the same desktop popup dimensions.
+- HTF questions use a compact two-column layout so all eight questions remain visible on common laptop/desktop resolutions.
+- Day and HTF chart panels are compacted without removing preview, link, upload, or open controls.
+- LTF chart references and all four execution questions fit without internal scrolling at 1650×900 and 1365×768.
+- Smaller screens retain a safe responsive scroll fallback.
+
+
+## v25 — Basic + Day Analysis
+
+- Day chart reference moved into Step 1 Basic Info.
+- Day Bias now supports Buy, Sell, and No Bias.
+- Added multi-select Day Bias Setups with persistent custom options.
+- HTF page now focuses only on HTF chart and POI checklist.
+
+## v30 — LTF closing layout and consolidated manual UI fixes
+
+- LTF Question 1 and Question 2 share the first row.
+- LTF Question 3 spans the complete second row.
+- LTF Question 4 spans the complete third row with larger Risk, RR, and P/L controls.
+- Day, HTF, and LTF chart areas use available vertical space.
+- HTF duplicate chart-panel outline is removed.
+- HTF analysis answers are optional and browser required-choice popovers are disabled.
+- Wizard workflow stays bottom-left and navigation actions stay bottom-right.

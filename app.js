@@ -18,13 +18,25 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_OPTIONS = {
+  dayBiasReason: ["SC OB", "FVG", "Last Two Candles", "None"],
+  dayBiasSetup: [
+    "Sweep CHOCH",
+    "OB Mitigation",
+    "FVG Mitigation",
+    "Counter FVG Mitigation",
+    "Doji"
+  ],
   poiMitigation: [
     "Aggressive Retracement",
     "Next Candle Trigger",
     "Coming After Creating a Counter FVG",
     "Trigger Candle Is the Counter FVG Created Candle"
   ],
-  entryLevel: ["Spartan CISD", "BB"]
+  entryLevel: ["Spartan CISD", "BB"],
+  tradeComments: [
+    "Good Trade",
+    "Went TP Without Triggering the Adjusted RR"
+  ]
 };
 
 const LTF_DEFAULT_LINK_LABELS = [
@@ -42,6 +54,15 @@ const SMT_PAIR_MAP = {
   USDJPY: "EURJPY",
   GBPJPY: "EURJPY",
   NAS100: "SPX500"
+};
+
+const INSTRUMENT_VISUALS = {
+  EURUSD: { name: "Euro / U.S. Dollar", icon: "icons/instruments/eurusd.svg" },
+  GBPUSD: { name: "British Pound / U.S. Dollar", icon: "icons/instruments/gbpusd.svg" },
+  XAUUSD: { name: "Gold / U.S. Dollar", icon: "icons/instruments/xauusd.svg" },
+  USDJPY: { name: "U.S. Dollar / Japanese Yen", icon: "icons/instruments/usdjpy.svg" },
+  GBPJPY: { name: "British Pound / Japanese Yen", icon: "icons/instruments/gbpjpy.svg" },
+  NAS100: { name: "Nasdaq 100 Index", icon: "icons/instruments/nas100.svg" }
 };
 
 const seedTrades = [
@@ -118,16 +139,25 @@ const elements = {
   date: document.querySelector("#tradeDate"),
   day: document.querySelector("#tradeDay"),
   pair: document.querySelector("#tradePair"),
+  pairFieldIcon: document.querySelector("#pairFieldIcon"),
   htf: document.querySelector("#tradeHtf"),
   ltf: document.querySelector("#tradeLtf"),
   smtPairText: document.querySelector("#smtPairText"),
   smtDetails: document.querySelector("#smtDetails"),
   poiSupportDetails: document.querySelector("#poiSupportDetails"),
   cleanHtfCisdDetails: document.querySelector("#cleanHtfCisdDetails"),
+  dayBiasSetupOptions: document.querySelector("#dayBiasSetupOptions"),
+  dayBiasReasonOptions: document.querySelector("#dayBiasReasonOptions"),
   poiMitigationOptions: document.querySelector("#poiMitigationOptions"),
   entryLevelOptions: document.querySelector("#entryLevelOptions"),
+  tradeCommentOptions: document.querySelector("#tradeCommentOptions"),
+  tradeCommentSummary: document.querySelector("#tradeCommentSummary"),
+  tradeCommentDropdown: document.querySelector("#tradeCommentDropdown"),
+  addDayBiasSetupOptionBtn: document.querySelector("#addDayBiasSetupOptionBtn"),
+  addDayBiasReasonOptionBtn: document.querySelector("#addDayBiasReasonOptionBtn"),
   addPoiMitigationOptionBtn: document.querySelector("#addPoiMitigationOptionBtn"),
   addEntryLevelOptionBtn: document.querySelector("#addEntryLevelOptionBtn"),
+  addTradeCommentOptionBtn: document.querySelector("#addTradeCommentOptionBtn"),
   backToBasicBtn: document.querySelector("#backToBasicBtn"),
   backToHtfBtn: document.querySelector("#backToHtfBtn"),
   basicMessage: document.querySelector("#basicFormMessage"),
@@ -349,7 +379,14 @@ function closeAuthModal() {
 }
 
 function cloudOptionCategory(category) {
-  return category === "poiMitigation" ? "htf_poi_mitigation" : "ltf_entry_level";
+  const categories = {
+    dayBiasSetup: "day_bias_setup",
+    dayBiasReason: "day_bias_reason",
+    poiMitigation: "htf_poi_mitigation",
+    entryLevel: "ltf_entry_level",
+    tradeComments: "ltf_trade_comment"
+  };
+  return categories[category] || category;
 }
 
 function replaceTradeInLocalList(trade) {
@@ -383,15 +420,27 @@ async function loadCloudData() {
     cloudIds.forEach((id) => syncedIds.add(id));
     saveSyncedIds(syncedIds, cloudUser.id);
 
+    const cloudDayBiasSetups = cloudOptions
+      .filter((option) => option.category === "day_bias_setup")
+      .map((option) => option.label);
+    const cloudDayBiasReasons = cloudOptions
+      .filter((option) => option.category === "day_bias_reason")
+      .map((option) => option.label);
     const cloudPoi = cloudOptions
       .filter((option) => option.category === "htf_poi_mitigation")
       .map((option) => option.label);
     const cloudEntry = cloudOptions
       .filter((option) => option.category === "ltf_entry_level")
       .map((option) => option.label);
+    const cloudTradeComments = cloudOptions
+      .filter((option) => option.category === "ltf_trade_comment")
+      .map((option) => option.label);
     optionLibrary = {
+      dayBiasReason: uniqueValues([...DEFAULT_OPTIONS.dayBiasReason, ...optionLibrary.dayBiasReason, ...cloudDayBiasReasons]),
+      dayBiasSetup: uniqueValues([...DEFAULT_OPTIONS.dayBiasSetup, ...optionLibrary.dayBiasSetup, ...cloudDayBiasSetups]),
       poiMitigation: uniqueValues([...DEFAULT_OPTIONS.poiMitigation, ...optionLibrary.poiMitigation, ...cloudPoi]),
-      entryLevel: uniqueValues([...DEFAULT_OPTIONS.entryLevel, ...optionLibrary.entryLevel, ...cloudEntry])
+      entryLevel: uniqueValues([...DEFAULT_OPTIONS.entryLevel, ...optionLibrary.entryLevel, ...cloudEntry]),
+      tradeComments: uniqueValues([...DEFAULT_OPTIONS.tradeComments, ...optionLibrary.tradeComments, ...cloudTradeComments])
     };
 
     saveTrades();
@@ -534,7 +583,8 @@ function createEmptyDraft() {
       chartLinks: LTF_DEFAULT_LINK_LABELS.map((label) => ({ id: createId(), label, url: "" })),
       uploadedImage: null,
       activePreview: null,
-      riskAmount: DEFAULT_RISK_AMOUNT
+      riskAmount: DEFAULT_RISK_AMOUNT,
+      tradeComments: []
     }
   };
 }
@@ -602,6 +652,12 @@ function normaliseDraft(draft) {
     htf: {
       ...empty.htf,
       ...(draft.htf || {}),
+      dayBiasSetup: Array.isArray(draft.htf?.dayBiasSetup)
+        ? uniqueValues(draft.htf.dayBiasSetup)
+        : [],
+      dayBiasReason: Array.isArray(draft.htf?.dayBiasReason)
+        ? uniqueValues(draft.htf.dayBiasReason)
+        : [],
       chartLinks: Array.isArray(draft.htf?.chartLinks) && draft.htf.chartLinks.length
         ? draft.htf.chartLinks
         : empty.htf.chartLinks
@@ -610,6 +666,9 @@ function normaliseDraft(draft) {
       ...empty.ltf,
       ...(draft.ltf || {}),
       entryLevel: normaliseEntryLevels(draft.ltf?.entryLevel),
+      tradeComments: Array.isArray(draft.ltf?.tradeComments)
+        ? uniqueValues(draft.ltf.tradeComments)
+        : [],
       riskAmount: draft.ltf?.riskAmount === "" || draft.ltf?.riskAmount == null
         ? DEFAULT_RISK_AMOUNT
         : String(draft.ltf.riskAmount),
@@ -623,8 +682,11 @@ function loadOptionLibrary() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.options) || "{}");
     return {
+      dayBiasReason: uniqueValues([...DEFAULT_OPTIONS.dayBiasReason, ...(stored.dayBiasReason || [])]),
+      dayBiasSetup: uniqueValues([...DEFAULT_OPTIONS.dayBiasSetup, ...(stored.dayBiasSetup || [])]),
       poiMitigation: uniqueValues([...DEFAULT_OPTIONS.poiMitigation, ...(stored.poiMitigation || [])]),
-      entryLevel: uniqueValues([...DEFAULT_OPTIONS.entryLevel, ...(stored.entryLevel || [])])
+      entryLevel: uniqueValues([...DEFAULT_OPTIONS.entryLevel, ...(stored.entryLevel || [])]),
+      tradeComments: uniqueValues([...DEFAULT_OPTIONS.tradeComments, ...(stored.tradeComments || [])])
     };
   } catch (error) {
     console.warn("Unable to load Evergreen option library:", error);
@@ -698,6 +760,82 @@ function updateSmtPair() {
     : `${pair} vs ${comparison}`;
 }
 
+function getCheckedValue(name, fallback = "Not selected") {
+  return document.querySelector(`#tradeModal input[name="${CSS.escape(name)}"]:checked`)?.value || fallback;
+}
+
+function getCheckedValues(name) {
+  return [...document.querySelectorAll(`#tradeModal input[name="${CSS.escape(name)}"]:checked`)]
+    .map((input) => input.value)
+    .filter(Boolean);
+}
+
+function setBlueprintText(field, value) {
+  document.querySelectorAll(`[data-summary-field="${CSS.escape(field)}"]`).forEach((node) => {
+    node.textContent = value;
+  });
+}
+
+function updateInstrumentVisuals() {
+  const pair = elements.pair.value || "EURUSD";
+  const visual = INSTRUMENT_VISUALS[pair] || { name: pair, icon: "icons/instruments/default.svg" };
+
+  if (elements.pairFieldIcon) {
+    elements.pairFieldIcon.src = visual.icon;
+    elements.pairFieldIcon.alt = `${pair} instrument logo`;
+  }
+
+  document.querySelectorAll("[data-summary-logo]").forEach((image) => {
+    image.src = visual.icon;
+    image.alt = `${pair} instrument logo`;
+  });
+  document.querySelectorAll("[data-summary-pair]").forEach((node) => {
+    node.textContent = pair;
+  });
+  document.querySelectorAll("[data-summary-name]").forEach((node) => {
+    node.textContent = visual.name;
+  });
+}
+
+function updateTradeBlueprint() {
+  updateInstrumentVisuals();
+
+  const direction = document.querySelector("#tradeDirection")?.value || "Not selected";
+  const htf = elements.htf.value || DEFAULT_HTF;
+  const ltf = elements.ltf.value || DEFAULT_LTF;
+  const dayBias = getCheckedValue("dayBias");
+  const daySetups = getCheckedValues("dayBiasSetup");
+  const hasSmt = getCheckedValue("hasSmt");
+  const smtStrength = getCheckedValue("smtStrength", "");
+  const poiSupported = getCheckedValue("poiSupported");
+  const poiSupportTypes = getCheckedValues("poiSupportType");
+  const interaction = getCheckedValue("fvgInteraction");
+  const poiZone = getCheckedValue("poiZone");
+  const entries = getCheckedValues("entryLevel");
+  const slPips = document.querySelector("#slPips")?.value?.trim() || "—";
+  const beLogic = getCheckedValue("beLogic");
+  const outcome = getCheckedValue("result", "Open");
+  const pnl = elements.calculatedPnl?.textContent || "$0.00";
+
+  setBlueprintText("direction", direction);
+  setBlueprintText("timeframes", `${String(htf).toUpperCase()} → ${ltf}`);
+  setBlueprintText("dayBias", dayBias);
+  setBlueprintText("daySetups", daySetups.length ? `${daySetups.length} selected` : "None selected");
+  setBlueprintText("smt", hasSmt === "Yes" && smtStrength ? smtStrength : hasSmt);
+  setBlueprintText("poiSupport", poiSupported === "Yes" && poiSupportTypes.length ? poiSupportTypes.join(" + ") : poiSupported);
+  setBlueprintText("interaction", interaction);
+  setBlueprintText("poiZone", poiZone);
+  setBlueprintText("entry", entries.length ? entries.join(" + ") : "Not selected");
+  setBlueprintText("sl", slPips === "—" ? "—" : `${slPips} pips`);
+  setBlueprintText("beLogic", beLogic);
+  setBlueprintText("outcome", outcome === "Open" ? "Open" : `${outcome} · ${pnl}`);
+
+  document.querySelectorAll(".trade-blueprint").forEach((panel) => {
+    panel.dataset.direction = direction.toLowerCase();
+    panel.dataset.outcome = outcome.toLowerCase();
+  });
+}
+
 function openModal() {
   currentDraft = loadDraft() || createEmptyDraft();
   optionLibrary = loadOptionLibrary();
@@ -706,6 +844,7 @@ function openModal() {
   renderAllChartLinks();
   updateChartPreviews();
   showStep(currentDraft.lastStep || "basic");
+  updateTradeBlueprint();
   elements.modal.hidden = false;
   document.body.classList.add("modal-open");
   clearMessages();
@@ -734,6 +873,7 @@ function clearAllTradeForms() {
   updateConditionalPanels();
   updateCalculatedPnl();
   syncChoiceCards();
+  updateTradeBlueprint();
   showStep("basic");
   saveDraft();
   clearMessages();
@@ -770,10 +910,12 @@ function showStep(step) {
     button.disabled = target === "htf"
       ? !Object.keys(currentDraft.basic || {}).length
       : target === "ltf"
-        ? !Object.keys(currentDraft.htf || {}).some((key) => !["chartLinks", "uploadedImage", "activePreview"].includes(key))
+        ? !["hasSmt", "poiSupported", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "poiMitigation"]
+          .some((key) => getComparableValues(currentDraft.htf?.[key]).length)
         : false;
   });
 
+  updateTradeBlueprint();
   saveDraft();
   window.setTimeout(() => {
     const scrollTarget = validStep === "basic"
@@ -790,8 +932,18 @@ function captureVisibleStep() {
 }
 
 function captureBasicForm() {
-  const data = Object.fromEntries(new FormData(elements.basicForm).entries());
+  const formData = new FormData(elements.basicForm);
+  const data = Object.fromEntries(formData.entries());
+  delete data.dayBias;
+  delete data.dayBiasSetup;
+  delete data.dayBiasReason;
   currentDraft.basic = data;
+  currentDraft.htf = {
+    ...currentDraft.htf,
+    dayBias: formData.get("dayBias") || "",
+    dayBiasSetup: formData.getAll("dayBiasSetup"),
+    dayBiasReason: formData.getAll("dayBiasReason")
+  };
   return data;
 }
 
@@ -799,7 +951,6 @@ function captureHtfForm() {
   const formData = new FormData(elements.htfForm);
   currentDraft.htf = {
     ...currentDraft.htf,
-    dayBias: formData.get("dayBias") || "",
     hasSmt: formData.get("hasSmt") || "",
     smtStrength: formData.get("smtStrength") || "",
     smtPair: elements.smtPairText.textContent,
@@ -845,7 +996,8 @@ function captureLtfForm() {
     beLogic: formData.get("beLogic") || "",
     result: formData.get("result") || "",
     riskAmount: formData.get("riskAmount") || "",
-    riskReward: formData.get("riskReward") || ""
+    riskReward: formData.get("riskReward") || "",
+    tradeComments: formData.getAll("tradeComments")
   };
   return currentDraft.ltf;
 }
@@ -862,6 +1014,11 @@ function restoreDraftIntoForms() {
   }
 
   setFormValues(elements.basicForm, currentDraft.basic);
+  setFormValues(elements.basicForm, {
+    dayBias: currentDraft.htf?.dayBias || "",
+    dayBiasSetup: currentDraft.htf?.dayBiasSetup || [],
+    dayBiasReason: currentDraft.htf?.dayBiasReason || []
+  });
   if (!currentDraft.basic?.date) setDefaultDate();
   if (!currentDraft.basic?.htf) elements.htf.value = DEFAULT_HTF;
   updateDay();
@@ -945,28 +1102,6 @@ function handleHtfSubmit(event) {
   event.preventDefault();
   elements.htfMessage.textContent = "";
   captureHtfForm();
-
-  if (!elements.htfForm.checkValidity()) {
-    elements.htfMessage.textContent = "Answer all required HTF questions.";
-    elements.htfForm.reportValidity();
-    return;
-  }
-  if (currentDraft.htf.hasSmt === "Yes" && !currentDraft.htf.smtStrength) {
-    elements.htfMessage.textContent = "Select Weak SMT or Strong SMT.";
-    return;
-  }
-  if (currentDraft.htf.poiSupported === "Yes" && !currentDraft.htf.poiSupportType.length) {
-    elements.htfMessage.textContent = "Select Previous FVG, Previous OB, or both.";
-    return;
-  }
-  if (currentDraft.htf.cleanHtfCisd === "Yes" && !currentDraft.htf.htfCisdLocation) {
-    elements.htfMessage.textContent = "Select CISD Inside FVG or CISD Outside FVG.";
-    return;
-  }
-  if (!currentDraft.htf.poiMitigation.length) {
-    elements.htfMessage.textContent = "Select at least one POI mitigation behaviour.";
-    return;
-  }
 
   saveDraft();
   showStep("ltf");
@@ -1063,6 +1198,20 @@ function updateCalculatedPnl() {
 
 function renderDynamicOptions() {
   renderOptionCards({
+    container: elements.dayBiasReasonOptions,
+    values: optionLibrary.dayBiasReason,
+    name: "dayBiasReason",
+    type: "checkbox",
+    selected: currentDraft.htf?.dayBiasReason || []
+  });
+  renderOptionCards({
+    container: elements.dayBiasSetupOptions,
+    values: optionLibrary.dayBiasSetup,
+    name: "dayBiasSetup",
+    type: "checkbox",
+    selected: currentDraft.htf?.dayBiasSetup || []
+  });
+  renderOptionCards({
     container: elements.poiMitigationOptions,
     values: optionLibrary.poiMitigation,
     name: "poiMitigation",
@@ -1076,10 +1225,19 @@ function renderDynamicOptions() {
     type: "checkbox",
     selected: normaliseEntryLevels(currentDraft.ltf?.entryLevel)
   });
+  renderOptionCards({
+    container: elements.tradeCommentOptions,
+    values: optionLibrary.tradeComments,
+    name: "tradeComments",
+    type: "checkbox",
+    selected: Array.isArray(currentDraft.ltf?.tradeComments) ? currentDraft.ltf.tradeComments : []
+  });
   syncChoiceCards();
+  updateTradeCommentSummary();
 }
 
 function renderOptionCards({ container, values, name, type, selected }) {
+  if (!container) return;
   container.innerHTML = "";
   values.forEach((value) => {
     const label = document.createElement("label");
@@ -1096,10 +1254,27 @@ function renderOptionCards({ container, values, name, type, selected }) {
   });
 }
 
+function updateTradeCommentSummary() {
+  if (!elements.tradeCommentSummary) return;
+  const selected = getCheckedValues("tradeComments");
+  if (!selected.length) {
+    elements.tradeCommentSummary.textContent = "Select trade comments";
+    return;
+  }
+  elements.tradeCommentSummary.textContent = selected.length === 1
+    ? selected[0]
+    : `${selected.length} comments selected`;
+}
+
 async function addCustomOption(category) {
-  const promptLabel = category === "poiMitigation"
-    ? "Enter a new POI mitigation behaviour:"
-    : "Enter a new LTF entry level:";
+  const promptLabels = {
+    dayBiasReason: "Enter a new Day bias reason:",
+    dayBiasSetup: "Enter a new Day bias setup:",
+    poiMitigation: "Enter a new POI mitigation behaviour:",
+    entryLevel: "Enter a new LTF entry level:",
+    tradeComments: "Enter a new trade comment:"
+  };
+  const promptLabel = promptLabels[category] || "Enter a new option:";
   const raw = window.prompt(promptLabel);
   if (raw === null) return;
   const value = raw.trim().replace(/\s+/g, " ");
@@ -1119,11 +1294,20 @@ async function addCustomOption(category) {
 
   optionLibrary[category].push(value);
   saveOptionLibrary();
-  if (category === "poiMitigation") {
+  if (category === "dayBiasReason") {
+    currentDraft.htf.dayBiasReason = uniqueValues([...(currentDraft.htf.dayBiasReason || []), value]);
+  } else if (category === "dayBiasSetup") {
+    currentDraft.htf.dayBiasSetup = uniqueValues([...(currentDraft.htf.dayBiasSetup || []), value]);
+  } else if (category === "poiMitigation") {
     currentDraft.htf.poiMitigation = uniqueValues([...(currentDraft.htf.poiMitigation || []), value]);
-  } else {
+  } else if (category === "entryLevel") {
     currentDraft.ltf.entryLevel = uniqueValues([
       ...normaliseEntryLevels(currentDraft.ltf.entryLevel),
+      value
+    ]);
+  } else if (category === "tradeComments") {
+    currentDraft.ltf.tradeComments = uniqueValues([
+      ...(currentDraft.ltf.tradeComments || []),
       value
     ]);
   }
@@ -1487,8 +1671,8 @@ function updateChartPreview(type) {
 
 const RESEARCH_FILTER_KEYS = [
   "direction", "status", "pair", "result", "session", "htf", "entryAttempt", "fvgStatus",
-  "fvgFormed", "dayBias", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction",
-  "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"
+  "fvgFormed", "dayBias", "dayBiasSetup", "dayBiasReason", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction",
+  "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic", "tradeComments"
 ];
 
 const INSIGHT_LABELS = {
@@ -1498,6 +1682,8 @@ const INSIGHT_LABELS = {
   fvgStatus: "FVG status",
   fvgFormed: "FVG formed",
   dayBias: "Day bias",
+  dayBiasSetup: "Day bias setup",
+  dayBiasReason: "Day bias reason",
   hasSmt: "SMT",
   smtStrength: "SMT strength",
   poiSupportType: "POI support",
@@ -1508,12 +1694,15 @@ const INSIGHT_LABELS = {
   htfCisdLocation: "HTF CISD location",
   poiMitigation: "Mitigation behaviour",
   entryLevel: "Entry level",
-  beLogic: "BE logic"
+  beLogic: "BE logic",
+  tradeComments: "Trade comments"
 };
 
 function getTradeField(trade, key) {
   const nested = {
     dayBias: trade.htfAnalysis?.dayBias,
+    dayBiasSetup: trade.htfAnalysis?.dayBiasSetup,
+    dayBiasReason: trade.htfAnalysis?.dayBiasReason,
     hasSmt: trade.htfAnalysis?.hasSmt,
     smtStrength: trade.htfAnalysis?.smtStrength,
     smtPair: trade.htfAnalysis?.smtPair,
@@ -1526,7 +1715,8 @@ function getTradeField(trade, key) {
     htfCisdLocation: trade.htfAnalysis?.htfCisdLocation,
     poiMitigation: trade.htfAnalysis?.poiMitigation,
     entryLevel: trade.ltfAnalysis?.entryLevel,
-    beLogic: trade.ltfAnalysis?.beLogic
+    beLogic: trade.ltfAnalysis?.beLogic,
+    tradeComments: trade.ltfAnalysis?.tradeComments
   };
   return Object.prototype.hasOwnProperty.call(nested, key) ? nested[key] : trade[key];
 }
@@ -1576,6 +1766,8 @@ function tradeSearchText(trade) {
     trade.date, trade.day, trade.pair, trade.direction, trade.status, trade.entryAttempt,
     trade.fvgStatus, trade.fvgFormed, trade.result, trade.session, trade.htf, trade.ltf,
     getTradeField(trade, "dayBias"),
+    ...getComparableValues(getTradeField(trade, "dayBiasSetup")),
+    ...getComparableValues(getTradeField(trade, "dayBiasReason")),
     getTradeField(trade, "hasSmt"), getTradeField(trade, "smtStrength"),
     getTradeField(trade, "smtPair"), getTradeField(trade, "poiSupported"),
     ...getComparableValues(getTradeField(trade, "poiSupportType")),
@@ -1586,7 +1778,8 @@ function tradeSearchText(trade) {
     getTradeField(trade, "htfCisdLocation"),
     ...getComparableValues(getTradeField(trade, "poiMitigation")),
     ...getComparableValues(getTradeField(trade, "entryLevel")),
-    getTradeField(trade, "beLogic")
+    getTradeField(trade, "beLogic"),
+    ...getComparableValues(getTradeField(trade, "tradeComments"))
   ];
   return values.filter(Boolean).join(" ").toLowerCase();
 }
@@ -1670,7 +1863,7 @@ function mostCommonInsight(subset, key) {
 }
 
 function renderSimilarityList(container, subset) {
-  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "dayBias", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic"];
+  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "dayBias", "dayBiasSetup", "dayBiasReason", "hasSmt", "smtStrength", "poiSupportType", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "beLogic", "tradeComments"];
   const insights = insightKeys.map((key) => mostCommonInsight(subset, key)).filter(Boolean).slice(0, 6);
   if (!insights.length) {
     container.innerHTML = '<p class="empty-insight">Not enough recorded trades for a similarity pattern.</p>';
@@ -1728,6 +1921,8 @@ function renderEdgeCards(filtered) {
     ["BEST PAIR", "pair", false],
     ["BEST SESSION", "session", false],
     ["BEST DAY BIAS", "dayBias", false],
+    ["BEST DAY BIAS SETUP", "dayBiasSetup", false],
+    ["BEST DAY BIAS REASON", "dayBiasReason", false],
     ["BEST SMT TYPE", "smtStrength", false],
     ["BEST POI SUPPORT", "poiSupportType", false],
     ["BEST FVG INTERACTION", "fvgInteraction", false],
@@ -2069,6 +2264,9 @@ function openTradeDetail(trade) {
           ${reviewBasicField("Entry Attempt", trade.entryAttempt)}
           ${reviewBasicField("FVG Status", trade.fvgStatus)}
           ${reviewBasicField("FVG Formed", trade.fvgFormed)}
+          ${reviewBasicField("Day Bias", getTradeField(trade, "dayBias"))}
+          ${reviewBasicField("Day Bias Setups", getTradeField(trade, "dayBiasSetup"))}
+          ${reviewBasicField("Day Bias Reason", getTradeField(trade, "dayBiasReason"))}
           ${reviewBasicField("Risk / RR", `${riskNumber === null ? "—" : formatCurrency(riskNumber)} / ${rrNumber === null ? "—" : `${rrNumber.toFixed(2)}R`}`)}
           ${reviewBasicField("P/L", pnlText, pnlTone)}
         </div>
@@ -2092,14 +2290,13 @@ function openTradeDetail(trade) {
               </div>
             </div>
             <div class="review-question-grid review-question-grid--htf">
-              ${reviewQuestionCard("1", "Day bias?", getTradeField(trade, "dayBias"))}
-              ${reviewQuestionCard("2", "Does it have SMT?", smtAnswer)}
-              ${reviewQuestionCard("3", "Is this POI supported by anything?", poiSupportAnswer)}
-              ${reviewQuestionCard("4", "FVG created third candle is?", getTradeField(trade, "thirdCandle"))}
-              ${reviewQuestionCard("5", "FVG mitigation or sweep?", getTradeField(trade, "fvgInteraction"))}
-              ${reviewQuestionCard("6", "Is this POI in premium or discount?", getTradeField(trade, "poiZone"))}
-              ${reviewQuestionCard("7", "Does this POI have a clean HTF CISD?", cleanCisdAnswer)}
-              ${reviewQuestionCard("8", "POI mitigation behaviour", getTradeField(trade, "poiMitigation"))}
+              ${reviewQuestionCard("1", "Does it have SMT?", smtAnswer)}
+              ${reviewQuestionCard("2", "Is this POI supported by anything?", poiSupportAnswer)}
+              ${reviewQuestionCard("3", "FVG created third candle is?", getTradeField(trade, "thirdCandle"))}
+              ${reviewQuestionCard("4", "FVG mitigation or sweep?", getTradeField(trade, "fvgInteraction"))}
+              ${reviewQuestionCard("5", "Is this POI in premium or discount?", getTradeField(trade, "poiZone"))}
+              ${reviewQuestionCard("6", "Does this POI have a clean HTF CISD?", cleanCisdAnswer)}
+              ${reviewQuestionCard("7", "POI mitigation behaviour", getTradeField(trade, "poiMitigation"))}
             </div>
           </section>
 
@@ -2115,6 +2312,7 @@ function openTradeDetail(trade) {
               ${reviewQuestionCard("2", "How much is the SL pips?", trade.slPips ?? trade.ltfAnalysis?.slPips)}
               ${reviewQuestionCard("3", "What was the BE logic?", getTradeField(trade, "beLogic"))}
               ${reviewQuestionCard("4", "Trade outcome", outcomeAnswer, "", outcomeTone)}
+              ${reviewQuestionCard("5", "Comments about the trade", getTradeField(trade, "tradeComments"))}
             </div>
           </section>
         </div>
@@ -2358,13 +2556,15 @@ function exportJson() {
 function exportCsv() {
   const headers = [
     "date", "pair", "direction", "status", "entryAttempt", "fvgStatus", "fvgFormed",
-    "dayBias", "hasSmt", "smtStrength", "smtPair", "poiSupported", "poiSupportType", "thirdCandle",
-    "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "slPips", "beLogic", "result", "riskAmount", "rr", "pnl"
+    "dayBias", "dayBiasSetup", "dayBiasReason", "hasSmt", "smtStrength", "smtPair", "poiSupported", "poiSupportType", "thirdCandle",
+    "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "entryLevel", "slPips", "beLogic", "tradeComments", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
       ...trade,
       dayBias: trade.htfAnalysis?.dayBias,
+      dayBiasSetup: trade.htfAnalysis?.dayBiasSetup?.join(" | "),
+      dayBiasReason: trade.htfAnalysis?.dayBiasReason?.join(" | "),
       hasSmt: trade.htfAnalysis?.hasSmt,
       smtStrength: trade.htfAnalysis?.smtStrength,
       smtPair: trade.htfAnalysis?.smtPair,
@@ -2377,7 +2577,8 @@ function exportCsv() {
       htfCisdLocation: trade.htfAnalysis?.htfCisdLocation,
       poiMitigation: trade.htfAnalysis?.poiMitigation?.join(" | "),
       entryLevel: getComparableValues(trade.ltfAnalysis?.entryLevel).join(" | "),
-      beLogic: trade.ltfAnalysis?.beLogic
+      beLogic: trade.ltfAnalysis?.beLogic,
+      tradeComments: getComparableValues(trade.ltfAnalysis?.tradeComments).join(" | ")
     };
     return headers.map((key) => csvCell(flat[key])).join(",");
   });
@@ -2409,8 +2610,11 @@ function importJsonFile(file) {
       trades = importedTrades;
       if (parsed.optionLibrary) {
         optionLibrary = {
+          dayBiasReason: uniqueValues([...DEFAULT_OPTIONS.dayBiasReason, ...(parsed.optionLibrary.dayBiasReason || [])]),
+          dayBiasSetup: uniqueValues([...DEFAULT_OPTIONS.dayBiasSetup, ...(parsed.optionLibrary.dayBiasSetup || [])]),
           poiMitigation: uniqueValues([...DEFAULT_OPTIONS.poiMitigation, ...(parsed.optionLibrary.poiMitigation || [])]),
-          entryLevel: uniqueValues([...DEFAULT_OPTIONS.entryLevel, ...(parsed.optionLibrary.entryLevel || [])])
+          entryLevel: uniqueValues([...DEFAULT_OPTIONS.entryLevel, ...(parsed.optionLibrary.entryLevel || [])]),
+          tradeComments: uniqueValues([...DEFAULT_OPTIONS.tradeComments, ...(parsed.optionLibrary.tradeComments || [])])
         };
         saveOptionLibrary();
       }
@@ -2516,11 +2720,22 @@ function bindEvents() {
   elements.closeModalBtn.addEventListener("click", closeModal);
   elements.clearFormBtn.addEventListener("click", clearAllTradeForms);
   elements.date.addEventListener("change", updateDay);
-  elements.htf.addEventListener("change", updateLtf);
-  elements.pair.addEventListener("change", updateSmtPair);
+  elements.htf.addEventListener("change", () => {
+    updateLtf();
+    updateTradeBlueprint();
+  });
+  elements.pair.addEventListener("change", () => {
+    updateSmtPair();
+    updateTradeBlueprint();
+  });
   elements.basicForm.addEventListener("submit", handleBasicSubmit);
   elements.htfForm.addEventListener("submit", handleHtfSubmit);
   elements.ltfForm.addEventListener("submit", handleLtfSubmit);
+  elements.basicForm.addEventListener("input", updateTradeBlueprint);
+  elements.basicForm.addEventListener("change", updateTradeBlueprint);
+  elements.htfForm.addEventListener("change", updateTradeBlueprint);
+  elements.ltfForm.addEventListener("input", updateTradeBlueprint);
+  elements.ltfForm.addEventListener("change", updateTradeBlueprint);
   elements.backToBasicBtn.addEventListener("click", () => {
     captureHtfForm();
     showStep("basic");
@@ -2530,7 +2745,7 @@ function bindEvents() {
     showStep("htf");
   });
 
-  elements.stepTabs.addEventListener("click", (event) => {
+  elements.stepTabs?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-step-target]");
     if (!button || button.disabled) return;
     captureVisibleStep();
@@ -2539,7 +2754,21 @@ function bindEvents() {
 
   document.addEventListener("change", (event) => {
     if (event.target.matches('.choice-card input[type="radio"], .choice-card input[type="checkbox"]')) {
+      // "None" is exclusive for Day Bias Reason.
+      if (event.target.matches('input[name="dayBiasReason"]') && event.target.checked) {
+        const reasonInputs = [...document.querySelectorAll('input[name="dayBiasReason"]')];
+        if (event.target.value === "None") {
+          reasonInputs.forEach((input) => {
+            if (input !== event.target) input.checked = false;
+          });
+        } else {
+          const noneInput = reasonInputs.find((input) => input.value === "None");
+          if (noneInput) noneInput.checked = false;
+        }
+      }
+
       syncChoiceCards();
+      updateTradeCommentSummary();
       updateConditionalPanels();
       updateCalculatedPnl();
       captureVisibleStep();
@@ -2554,14 +2783,24 @@ function bindEvents() {
         applySweepEntryDefault();
       }
 
+      updateTradeBlueprint();
       saveDraft();
     }
   });
 
-  elements.riskAmount.addEventListener("input", updateCalculatedPnl);
-  elements.riskReward.addEventListener("input", updateCalculatedPnl);
+  elements.riskAmount.addEventListener("input", () => {
+    updateCalculatedPnl();
+    updateTradeBlueprint();
+  });
+  elements.riskReward.addEventListener("input", () => {
+    updateCalculatedPnl();
+    updateTradeBlueprint();
+  });
+  elements.addDayBiasSetupOptionBtn.addEventListener("click", () => addCustomOption("dayBiasSetup"));
+  elements.addDayBiasReasonOptionBtn.addEventListener("click", () => addCustomOption("dayBiasReason"));
   elements.addPoiMitigationOptionBtn.addEventListener("click", () => addCustomOption("poiMitigation"));
   elements.addEntryLevelOptionBtn.addEventListener("click", () => addCustomOption("entryLevel"));
+  elements.addTradeCommentOptionBtn.addEventListener("click", () => addCustomOption("tradeComments"));
 
   bindChartUi("day");
   bindChartUi("htf");
@@ -2673,6 +2912,7 @@ renderAllChartLinks();
 updateChartPreviews();
 updateConditionalPanels();
 updateCalculatedPnl();
+updateTradeBlueprint();
 updateWeekRange();
 syncChoiceCards();
 renderTrades();
