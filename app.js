@@ -1863,7 +1863,37 @@ function reviewBasicField(label, value, modifier = "") {
   </div>`;
 }
 
-function getReviewChartPreview(analysis) {
+function getMatchingOutcomeLink(analysis, tradeResult) {
+  const links = (analysis?.chartLinks || []).filter((item) => item?.url && item?.label);
+  const result = String(tradeResult || "").trim().toUpperCase();
+  if (!result) return null;
+
+  const keywordMap = {
+    TP: ["tp", "target"],
+    SL: ["sl", "stop"],
+    BE: ["be", "break even", "breakeven"]
+  };
+
+  const keywords = keywordMap[result] || [];
+  return links.find((link) => {
+    const label = String(link.label || "").toLowerCase();
+    return keywords.some((keyword) => label.includes(keyword));
+  }) || null;
+}
+
+function getReviewChartPreview(analysis, options = {}) {
+  const preferredLink = options.preferredLink;
+  if (preferredLink?.url) {
+    const preview = resolveImagePreview(preferredLink.url);
+    if (preview.src && !preview.message) {
+      return {
+        src: preview.src,
+        originalSrc: preferredLink.url,
+        label: preferredLink.label || "Trade outcome snapshot"
+      };
+    }
+  }
+
   if (analysis?.uploadedImage?.dataUrl) {
     return {
       src: analysis.uploadedImage.dataUrl,
@@ -1895,9 +1925,9 @@ function getReviewChartPreview(analysis) {
   return null;
 }
 
-function reviewChartPanel(title, analysis, tone = "htf") {
+function reviewChartPanel(title, analysis, tone = "htf", options = {}) {
   const links = (analysis?.chartLinks || []).filter((item) => item?.url);
-  const preview = getReviewChartPreview(analysis);
+  const preview = getReviewChartPreview(analysis, options);
   const linkMarkup = links.map((item, index) => {
     const safeUrl = /^https?:\/\//i.test(item.url) ? item.url : "";
     if (!safeUrl) return "";
@@ -1986,7 +2016,9 @@ function openTradeDetail(trade) {
       <div class="trade-view-main">
         <aside class="trade-view-chart-column" aria-label="Saved trade charts">
           ${reviewChartPanel("HTF Charts", trade.htfAnalysis, "htf")}
-          ${reviewChartPanel("LTF Charts", trade.ltfAnalysis, "ltf")}
+          ${reviewChartPanel("LTF Charts", trade.ltfAnalysis, "ltf", {
+            preferredLink: getMatchingOutcomeLink(trade.ltfAnalysis, trade.result)
+          })}
         </aside>
 
         <div class="trade-view-analysis-grid">
