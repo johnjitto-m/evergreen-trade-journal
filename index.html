@@ -806,6 +806,23 @@
     </section>
   </div>
 
+  <div class="modal-backdrop delete-confirm-backdrop" id="deleteConfirmModal" hidden>
+    <section class="delete-confirm-modal panel" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" aria-describedby="deleteConfirmMessage">
+      <div class="delete-confirm-icon" aria-hidden="true">!</div>
+      <div class="delete-confirm-copy">
+        <p class="eyebrow">DELETE TRADE</p>
+        <h2 id="deleteConfirmTitle">Delete this trade?</h2>
+        <p id="deleteConfirmMessage" class="muted">This trade will be permanently removed.</p>
+        <p class="delete-confirm-warning">This action cannot be undone.</p>
+        <p class="form-message delete-confirm-status" id="deleteConfirmStatus" role="status"></p>
+      </div>
+      <div class="delete-confirm-actions">
+        <button class="btn btn-secondary" id="cancelDeleteBtn" type="button">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn" type="button">Delete Trade</button>
+      </div>
+    </section>
+  </div>
+
   <div class="image-preview-modal" id="imagePreviewModal" hidden>
     <button class="icon-btn preview-close" id="closeImagePreviewBtn" type="button" aria-label="Close image preview">×</button>
     <div class="image-preview-content">
@@ -818,8 +835,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=18"></script>
-  <script src="supabase-sync.js?v=18"></script>
-  <script src="app.js?v=18"></script>
+  <script src="supabase-config.js?v=21"></script>
+  <script src="supabase-sync.js?v=21"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>

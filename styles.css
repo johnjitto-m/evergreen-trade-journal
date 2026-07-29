@@ -3020,3 +3020,99 @@ button.review-chart-media {
     padding: 4px 7px;
   }
 }
+
+
+/* ================================================================
+   Reliable in-app trade deletion confirmation
+   Replaces browser confirm dialogs that Brave may block or suppress.
+   ================================================================ */
+.delete-confirm-backdrop {
+  z-index: 1300;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  background: rgba(1, 7, 18, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.delete-confirm-modal {
+  width: min(520px, calc(100vw - 32px));
+  padding: 22px;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 16px 18px;
+  border-color: rgba(255, 91, 104, 0.4);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.64);
+}
+
+.delete-confirm-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 91, 104, 0.55);
+  background: rgba(92, 25, 37, 0.8);
+  color: #ffadb4;
+  font-size: 1.55rem;
+  font-weight: 900;
+}
+
+.delete-confirm-copy h2 {
+  margin: 3px 0 8px;
+}
+
+.delete-confirm-warning {
+  margin: 12px 0 0;
+  color: #ffadb4;
+  font-weight: 800;
+}
+
+.delete-confirm-status {
+  min-height: 22px;
+  margin-top: 10px;
+  color: #ffadb4;
+}
+
+.delete-confirm-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.btn-danger {
+  border-color: rgba(255, 91, 104, 0.62);
+  background: linear-gradient(180deg, #d94a5b, #b82f43);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(184, 47, 67, 0.24);
+}
+
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.delete-confirm-actions .btn:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+@media (max-width: 560px) {
+  .delete-confirm-modal {
+    grid-template-columns: 1fr;
+  }
+
+  .delete-confirm-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .delete-confirm-actions {
+    grid-column: auto;
+  }
+
+  .delete-confirm-actions .btn {
+    flex: 1;
+  }
+}

@@ -281,11 +281,17 @@
       trade.ltfImagePath || trade.ltfAnalysis?.uploadedImage?.path
     ].filter(Boolean);
 
-    const { error } = await requireClient()
+    const { data, error } = await requireClient()
       .from(TABLE_TRADES)
       .delete()
-      .eq("id", trade.id);
+      .eq("id", trade.id)
+      .eq("user_id", user.id)
+      .select("id");
     if (error) throw error;
+
+    if (!Array.isArray(data)) {
+      throw new Error("Supabase did not confirm the trade deletion.");
+    }
 
     if (paths.length) {
       const { error: storageError } = await requireClient().storage.from(IMAGE_BUCKET).remove(paths);

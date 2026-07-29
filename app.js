@@ -189,6 +189,12 @@ const elements = {
   closeTradeDetailBtn: document.querySelector("#closeTradeDetailBtn"),
   tradeDetailTitle: document.querySelector("#tradeDetailTitle"),
   tradeDetailContent: document.querySelector("#tradeDetailContent"),
+  deleteConfirmModal: document.querySelector("#deleteConfirmModal"),
+  deleteConfirmTitle: document.querySelector("#deleteConfirmTitle"),
+  deleteConfirmMessage: document.querySelector("#deleteConfirmMessage"),
+  deleteConfirmStatus: document.querySelector("#deleteConfirmStatus"),
+  cancelDeleteBtn: document.querySelector("#cancelDeleteBtn"),
+  confirmDeleteBtn: document.querySelector("#confirmDeleteBtn"),
   imagePreviewModal: document.querySelector("#imagePreviewModal"),
   previewImage: document.querySelector("#previewImage"),
   previewStatus: document.querySelector("#previewStatus"),
@@ -228,6 +234,7 @@ let cloudUser = null;
 let cloudInitialised = false;
 let cloudBusy = false;
 let loadedCloudUserId = null;
+let pendingDeleteTradeId = null;
 
 function syncedIdsKey(userId) {
   return `${STORAGE_KEYS.syncedIdsPrefix}:${userId}`;
@@ -253,6 +260,13 @@ function markTradeSynced(tradeId, userId = cloudUser?.id) {
   if (!userId || !tradeId) return;
   const ids = loadSyncedIds(userId);
   ids.add(tradeId);
+  saveSyncedIds(ids, userId);
+}
+
+function unmarkTradeSynced(tradeId, userId = cloudUser?.id) {
+  if (!userId || !tradeId) return;
+  const ids = loadSyncedIds(userId);
+  ids.delete(tradeId);
   saveSyncedIds(ids, userId);
 }
 
@@ -2344,6 +2358,69 @@ function importJsonFile(file) {
   reader.readAsText(file);
 }
 
+function openDeleteConfirm(trade) {
+  pendingDeleteTradeId = trade.id;
+  elements.deleteConfirmTitle.textContent = `Delete ${trade.pair || "trade"}?`;
+  elements.deleteConfirmMessage.textContent = `${trade.pair || "Trade"} · ${trade.date || "No date"} will be permanently removed from Evergreen Supabase and this browser.`;
+  elements.deleteConfirmStatus.textContent = "";
+  elements.confirmDeleteBtn.disabled = false;
+  elements.cancelDeleteBtn.disabled = false;
+  elements.deleteConfirmModal.hidden = false;
+  document.body.classList.add("modal-open");
+  window.setTimeout(() => elements.cancelDeleteBtn.focus(), 0);
+}
+
+function closeDeleteConfirm() {
+  if (elements.confirmDeleteBtn.disabled) return;
+  pendingDeleteTradeId = null;
+  elements.deleteConfirmModal.hidden = true;
+  elements.deleteConfirmStatus.textContent = "";
+  if (elements.modal.hidden && elements.tradeDetailModal.hidden && elements.imagePreviewModal.hidden) {
+    document.body.classList.remove("modal-open");
+  }
+}
+
+async function confirmPendingDelete() {
+  const trade = trades.find((item) => item.id === pendingDeleteTradeId);
+  if (!trade) {
+    closeDeleteConfirm();
+    showToast("Trade is no longer available.");
+    return;
+  }
+
+  elements.confirmDeleteBtn.disabled = true;
+  elements.cancelDeleteBtn.disabled = true;
+  elements.deleteConfirmStatus.textContent = "Deleting trade…";
+
+  const isCloudTrade = Boolean(cloudUser) && (
+    trade.cloudUserId === cloudUser.id || loadSyncedIds(cloudUser.id).has(trade.id)
+  );
+
+  try {
+    if (isCloudTrade) {
+      await window.EvergreenCloud.deleteTrade(trade);
+      unmarkTradeSynced(trade.id, cloudUser.id);
+    }
+
+    trades = trades.filter((item) => item.id !== trade.id);
+    saveTrades();
+    renderTrades();
+    updateCloudUi();
+
+    pendingDeleteTradeId = null;
+    elements.deleteConfirmModal.hidden = true;
+    elements.confirmDeleteBtn.disabled = false;
+    elements.cancelDeleteBtn.disabled = false;
+    document.body.classList.remove("modal-open");
+    showToast(isCloudTrade ? "Trade deleted from Evergreen Supabase." : "Local Evergreen trade deleted.");
+  } catch (error) {
+    console.error("Trade deletion failed:", error);
+    elements.deleteConfirmStatus.textContent = `Delete failed: ${error.message || "Unknown Supabase error."}`;
+    elements.confirmDeleteBtn.disabled = false;
+    elements.cancelDeleteBtn.disabled = false;
+  }
+}
+
 async function handleRowAction(event) {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
@@ -2351,27 +2428,7 @@ async function handleRowAction(event) {
   if (!trade) return;
 
   if (button.dataset.action === "delete") {
-    const confirmed = window.confirm(`Delete the ${trade.pair} Evergreen trade from ${trade.date}?`);
-    if (!confirmed) return;
-
-    const isCloudTrade = Boolean(cloudUser) && (
-      trade.cloudUserId === cloudUser.id || loadSyncedIds(cloudUser.id).has(trade.id)
-    );
-    if (isCloudTrade) {
-      try {
-        await window.EvergreenCloud.deleteTrade(trade);
-      } catch (error) {
-        console.error("Cloud trade deletion failed:", error);
-        showToast(`Delete failed in Supabase: ${error.message || "Unknown error."}`);
-        return;
-      }
-    }
-
-    trades = trades.filter((item) => item.id !== trade.id);
-    saveTrades();
-    renderTrades();
-    updateCloudUi();
-    showToast(isCloudTrade ? "Trade deleted from Evergreen Supabase." : "Local Evergreen trade deleted.");
+    openDeleteConfirm(trade);
     return;
   }
 
@@ -2505,6 +2562,11 @@ function bindEvents() {
   elements.filterGrid.addEventListener("change", renderResearchView);
 
   elements.closeTradeDetailBtn.addEventListener("click", closeTradeDetail);
+  elements.cancelDeleteBtn.addEventListener("click", closeDeleteConfirm);
+  elements.confirmDeleteBtn.addEventListener("click", confirmPendingDelete);
+  elements.deleteConfirmModal.addEventListener("click", (event) => {
+    if (event.target === elements.deleteConfirmModal) closeDeleteConfirm();
+  });
   elements.tradeDetailModal.addEventListener("click", (event) => {
     if (event.target === elements.tradeDetailModal) closeTradeDetail();
   });
@@ -2517,6 +2579,10 @@ function bindEvents() {
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.deleteConfirmModal.hidden) closeDeleteConfirm();
   });
 
   elements.installBtn.addEventListener("click", async () => {
