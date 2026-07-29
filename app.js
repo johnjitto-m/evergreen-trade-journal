@@ -830,6 +830,12 @@ function restoreDraftIntoForms() {
   elements.htfForm.reset();
   elements.ltfForm.reset();
 
+  // Older journals may still contain the removed “Missed Trade” status.
+  // Treat it as Not Taken when that trade is edited.
+  if (currentDraft.basic?.status === "Missed Trade") {
+    currentDraft.basic.status = "Not Taken";
+  }
+
   setFormValues(elements.basicForm, currentDraft.basic);
   if (!currentDraft.basic?.date) setDefaultDate();
   if (!currentDraft.basic?.htf) elements.htf.value = DEFAULT_HTF;
@@ -2160,7 +2166,7 @@ function renderTrades() {
       <td class="date-cell">${dateText}<small>${escapeHtml(dayText)}</small></td>
       <td>${escapeHtml(trade.pair)}</td>
       <td><span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction)}</span></td>
-      <td><span class="pill pill-status">${escapeHtml(trade.status)}</span></td>
+      <td><span class="pill ${poiZoneClass(getTradeField(trade, "poiZone"))}">${escapeHtml(getTradeField(trade, "poiZone") || "—")}</span></td>
       <td><span class="pill pill-entry">${escapeHtml(String(trade.entryAttempt || "").replace(" Entry", ""))}</span></td>
       <td>${escapeHtml(trade.fvgStatus)}</td>
       <td>${escapeHtml(trade.fvgFormed)}</td>
@@ -2224,6 +2230,12 @@ function updateWeekRange() {
     ? `${monthFormatter.format(monday)} ${monday.getDate()} – ${sunday.getDate()}, ${sunday.getFullYear()}`
     : `${monthFormatter.format(monday)} ${monday.getDate()} – ${monthFormatter.format(sunday)} ${sunday.getDate()}, ${sunday.getFullYear()}`;
   elements.weekRange.textContent = `${range} · Monday to Sunday`;
+}
+
+function poiZoneClass(zone) {
+  if (zone === "Premium") return "pill-premium";
+  if (zone === "Discount") return "pill-discount";
+  return "pill-neutral";
 }
 
 function resultClass(result) {

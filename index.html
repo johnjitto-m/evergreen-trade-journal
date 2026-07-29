@@ -84,13 +84,13 @@
             <col style="width: 4%" />
             <col style="width: 11%" />
             <col style="width: 9%" />
-            <col style="width: 10%" />
-            <col style="width: 12%" />
+            <col style="width: 9%" />
+            <col style="width: 11%" />
             <col style="width: 7%" />
             <col style="width: 11%" />
             <col style="width: 13%" />
             <col style="width: 9%" />
-            <col style="width: 14%" />
+            <col style="width: 16%" />
           </colgroup>
           <thead>
             <tr>
@@ -98,7 +98,7 @@
               <th>Date</th>
               <th>Pair</th>
               <th>Direction</th>
-              <th>Status</th>
+              <th>Premium / Discount</th>
               <th>Entry</th>
               <th>Setup</th>
               <th>FVG Formed</th>
@@ -392,21 +392,16 @@
             <fieldset class="choice-section">
               <legend class="section-label">TRADE STATUS</legend>
               <p class="question">Did you take this setup?</p>
-              <div class="choice-grid choice-grid-3" data-choice-group="status">
+              <div class="choice-grid choice-grid-2" data-choice-group="status">
                 <label class="choice-card selected">
                   <input type="radio" name="status" value="Took Trade" checked />
                   <strong>Took Trade</strong>
                   <small>Counts in P/L, win rate and RR.</small>
                 </label>
                 <label class="choice-card">
-                  <input type="radio" name="status" value="Missed Trade" />
-                  <strong>Missed Trade</strong>
-                  <small>Saved for review, not counted in stats.</small>
-                </label>
-                <label class="choice-card">
                   <input type="radio" name="status" value="Not Taken" />
                   <strong>Not Taken</strong>
-                  <small>Skipped setup, not counted in stats.</small>
+                  <small>Skipped setup, saved for review and excluded from stats.</small>
                 </label>
               </div>
             </fieldset>

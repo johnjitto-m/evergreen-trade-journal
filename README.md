@@ -167,3 +167,10 @@ The View Trade screen now mirrors the Add Trade visual language in one full-scre
 ## Centered trade-review popup (v18)
 
 The View Trade screen now opens as a centered 1400px maximum-width popup instead of stretching edge-to-edge. Desktop layouts keep all saved Basic, HTF, LTF, and chart-reference information visible in a balanced Add Trade-style review. Smaller screens retain the responsive scroll fallback.
+
+
+## Dashboard POI-zone update
+
+- The weekly dashboard now shows Premium / Discount beside Direction instead of Status.
+- New trades offer only Took Trade and Not Taken.
+- Older Missed Trade records are treated as Not Taken when edited.

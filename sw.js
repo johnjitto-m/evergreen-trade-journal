@@ -1,4 +1,4 @@
-const CACHE_NAME = "evergreen-trade-journal-v21";
+const CACHE_NAME = "evergreen-trade-journal-v22";
 const APP_FILES = [
   "./",
   "./index.html",

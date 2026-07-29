@@ -362,6 +362,18 @@ td {
   background: rgba(95, 129, 255, 0.09);
 }
 
+.pill-premium {
+  color: #ffd98a;
+  border-color: rgba(255, 190, 73, 0.42);
+  background: rgba(255, 190, 73, 0.1);
+}
+
+.pill-discount {
+  color: #8fe8ff;
+  border-color: rgba(64, 200, 238, 0.4);
+  background: rgba(64, 200, 238, 0.09);
+}
+
 .pill-neutral {
   color: var(--muted);
   border-color: var(--border);
