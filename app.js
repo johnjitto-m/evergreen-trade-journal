@@ -1815,6 +1815,7 @@ function getTradeSetupRank(trade) {
   const dayBias = getTradeField(trade, "dayBias");
   const direction = trade.direction;
   const dayBiasPros = getComparableValues(getTradeField(trade, "dayBiasPros"));
+  const dayBiasCons = getComparableValues(getTradeField(trade, "dayBiasCons"));
   const poiBacking = getComparableValues(getTradeField(trade, "htfPoiBackedBy"));
   const poiMitigation = getComparableValues(getTradeField(trade, "poiMitigation"));
   const hasPro = (expected) => dayBiasPros.some((value) => value.toLowerCase() === expected.toLowerCase());
@@ -1831,20 +1832,21 @@ function getTradeSetupRank(trade) {
   const locationAligned = (dayBias === "Buy" && poiZone === "Discount")
     || (dayBias === "Sell" && poiZone === "Premium");
   const checks = [
-    biasAligned,
-    isPrimeSession,
-    locationAligned,
-    hasPro("Sweep CHOCH"),
-    hasSupportingPro,
-    hasSmt,
-    getTradeField(trade, "thirdCandle") === "Positive",
-    hasCleanCisd,
-    poiBacking.length > 0,
-    poiMitigation.length === 1 && hasMitigation("None"),
-    isBreakerBlock
+    { label: "Bias alignment", passed: biasAligned, detail: biasAligned ? `${direction} matches ${dayBias} bias` : `${direction || "No direction"} conflicts with ${dayBias || "unrecorded"} bias` },
+    { label: "Prime session", passed: isPrimeSession, detail: isPrimeSession ? trade.session : `${trade.session || "Not recorded"}; requires London or New York` },
+    { label: "Premium / Discount", passed: locationAligned, detail: locationAligned ? `${dayBias} at ${poiZone}` : `${dayBias || "Bias not recorded"} at ${poiZone || "unrecorded location"}; Buy needs Discount and Sell needs Premium` },
+    { label: "Sweep CHOCH Pro", passed: hasPro("Sweep CHOCH"), detail: hasPro("Sweep CHOCH") ? "Selected in Day Bias Pros" : "Missing from Day Bias Pros" },
+    { label: "Supporting Day Bias Pro", passed: hasSupportingPro, detail: hasSupportingPro ? "OB Mitigation, Last Two Candles, or IFVG selected" : "Requires OB Mitigation, Last Two Candles, or IFVG" },
+    { label: "Day Bias Cons", passed: dayBiasCons.length === 0, detail: dayBiasCons.length === 0 ? "None selected" : `${dayBiasCons.join(", ")}; A+ requires no Cons` },
+    { label: "SMT", passed: hasSmt, detail: hasSmt ? "SMT confirmed" : "SMT must be Yes" },
+    { label: "Third Candle", passed: getTradeField(trade, "thirdCandle") === "Positive", detail: getTradeField(trade, "thirdCandle") === "Positive" ? "Positive and aligned with bias" : `${getTradeField(trade, "thirdCandle") || "Not recorded"}; must be Positive` },
+    { label: "Clean HTF CISD", passed: hasCleanCisd, detail: hasCleanCisd ? getTradeField(trade, "htfCisdLocation") || "Confirmed" : "HTF CISD must be Yes" },
+    { label: "POI Backing", passed: poiBacking.length > 0, detail: poiBacking.length ? poiBacking.join(", ") : "At least one POI backing is required" },
+    { label: "POI Mitigation Behaviour", passed: poiMitigation.length === 1 && hasMitigation("None"), detail: poiMitigation.length === 1 && hasMitigation("None") ? "None" : `${poiMitigation.join(", ") || "Not recorded"}; A+ requires only None` },
+    { label: "Entry Option", passed: isBreakerBlock, detail: isBreakerBlock ? "Breaker Block" : `${getTradeField(trade, "entryLevel") || "Not recorded"}; A+ requires Breaker Block` }
   ];
-  const score = checks.filter(Boolean).length;
-  let grade = score === checks.length ? "A+" : score >= 10 ? "A" : score >= 8 ? "B" : score >= 5 ? "C" : "D";
+  const score = checks.filter((check) => check.passed).length;
+  let grade = score === checks.length ? "A+" : score >= 11 ? "A" : score >= 9 ? "B" : score >= 6 ? "C" : "D";
   const gradeOrder = ["D", "C", "B", "A", "A+"];
   const capGrade = (maximum) => {
     if (gradeOrder.indexOf(grade) > gradeOrder.indexOf(maximum)) grade = maximum;
@@ -1854,7 +1856,13 @@ function getTradeSetupRank(trade) {
   if (!hasSmt || !hasCleanCisd) capGrade("B");
   if (!isBreakerBlock) capGrade("A");
 
-  return { grade, score, total: checks.length };
+  return {
+    grade,
+    score,
+    total: checks.length,
+    checks,
+    failedChecks: checks.filter((check) => !check.passed)
+  };
 }
 
 function getComparableValues(value) {
@@ -2272,6 +2280,42 @@ function replayDataRow(label, value, modifier = "") {
   </div>`;
 }
 
+function reviewSetupGradeMetric(rank) {
+  const tone = `setup-grade-${rank.grade.replace("+", "-plus").toLowerCase()}`;
+  return `<button class="trade-review-metric setup-grade-metric ${tone}" type="button" data-setup-rank-open>
+    <span>Setup Grade</span>
+    <strong>${escapeHtml(rank.grade)} Setup</strong>
+    <small>Why this grade?</small>
+  </button>`;
+}
+
+function setupRankBreakdown(rank) {
+  const failedText = rank.failedChecks.length
+    ? `${rank.failedChecks.length} missing ${rank.failedChecks.length === 1 ? "condition" : "conditions"}`
+    : "Every A+ condition passed";
+  const checks = rank.checks.map((check) => `
+    <article class="setup-rank-check ${check.passed ? "passed" : "failed"}">
+      <span aria-hidden="true">${check.passed ? "✓" : "×"}</span>
+      <div><strong>${escapeHtml(check.label)}</strong><small>${escapeHtml(check.detail)}</small></div>
+      <b>${check.passed ? "Pass" : "Missing"}</b>
+    </article>
+  `).join("");
+
+  return `<section class="setup-rank-overlay" data-setup-rank-panel hidden>
+    <div class="setup-rank-dialog" role="dialog" aria-modal="true" aria-label="Setup grade breakdown">
+      <div class="setup-rank-heading">
+        <div>
+          <p class="section-label">SETUP GRADE BREAKDOWN</p>
+          <h3>${escapeHtml(rank.grade)} Setup <span>${rank.score}/${rank.total} checks passed</span></h3>
+          <small>${escapeHtml(failedText)} · Trade result does not affect this grade.</small>
+        </div>
+        <button class="icon-btn" type="button" data-setup-rank-close aria-label="Close setup grade breakdown">×</button>
+      </div>
+      <div class="setup-rank-checks">${checks}</div>
+    </div>
+  </section>`;
+}
+
 function getLtfOutcomeSetupLink(analysis) {
   const allLinks = Array.isArray(analysis?.chartLinks) ? analysis.chartLinks : [];
   const savedLinks = allLinks.filter((item) => item?.url);
@@ -2505,11 +2549,12 @@ function openTradeDetail(trade) {
             ${reviewMetric("RR", rrNumber === null ? "—" : `${rrNumber.toFixed(2)}R`)}
             ${reviewMetric("Risk", riskNumber === null ? "—" : formatCurrency(riskNumber))}
             ${reviewMetric("Result", trade.result || "Pending", outcomeTone)}
-            ${reviewMetric("Setup Grade", `${setupRank.grade} Setup`, `setup-grade-${setupRank.grade.replace("+", "-plus").toLowerCase()}`)}
+            ${reviewSetupGradeMetric(setupRank)}
           </div>
         </div>
       </section>
 
+      ${setupRankBreakdown(setupRank)}
       <div class="trade-replay-body">${reviewChartWorkspace(trade)}</div>
     </div>
   `;
@@ -3108,7 +3153,11 @@ function bindEvents() {
     if (event.key !== "Escape") return;
     if (!elements.authModal.hidden) closeAuthModal();
     else if (!elements.imagePreviewModal.hidden) closeImagePreview();
-    else if (!elements.tradeDetailModal.hidden) closeTradeDetail();
+    else if (!elements.tradeDetailModal.hidden) {
+      const rankPanel = elements.tradeDetailContent.querySelector("[data-setup-rank-panel]");
+      if (rankPanel && !rankPanel.hidden) rankPanel.hidden = true;
+      else closeTradeDetail();
+    }
     else if (!elements.modal.hidden) closeModal();
   });
 
@@ -3174,6 +3223,15 @@ function bindEvents() {
     if (event.target === elements.tradeDetailModal) closeTradeDetail();
   });
   elements.tradeDetailContent.addEventListener("click", (event) => {
+    const rankPanel = elements.tradeDetailContent.querySelector("[data-setup-rank-panel]");
+    if (event.target.closest("[data-setup-rank-open]")) {
+      if (rankPanel) rankPanel.hidden = false;
+      return;
+    }
+    if (event.target.closest("[data-setup-rank-close]") || event.target === rankPanel) {
+      if (rankPanel) rankPanel.hidden = true;
+      return;
+    }
     const chartTab = event.target.closest("[data-review-chart-tab]");
     if (chartTab) {
       const workspace = chartTab.closest(".review-chart-workspace");

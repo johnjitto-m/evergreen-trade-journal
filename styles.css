@@ -3634,6 +3634,159 @@ button.review-chart-media {
   }
 }
 
+/* Clickable, transparent explanation for every calculated setup grade. */
+.trade-replay-shell {
+  position: relative;
+}
+
+button.setup-grade-metric {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.setup-grade-metric small {
+  color: #8fa5bd;
+  font-size: 0.56rem;
+  font-weight: 850;
+}
+
+.setup-grade-metric:hover,
+.setup-grade-metric:focus-visible {
+  border-color: rgba(36, 220, 120, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+}
+
+.setup-rank-overlay[hidden] {
+  display: none;
+}
+
+.setup-rank-overlay {
+  position: absolute;
+  z-index: 15;
+  inset: 83px 0 0;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  border-radius: 15px;
+  background: rgba(2, 8, 17, 0.78);
+  backdrop-filter: blur(9px);
+}
+
+.setup-rank-dialog {
+  width: min(940px, 100%);
+  max-height: 100%;
+  padding: 15px;
+  overflow: hidden;
+  border: 1px solid rgba(76, 132, 255, 0.58);
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(13, 27, 47, 0.99), rgba(6, 16, 30, 0.99));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.62), inset 0 2px 0 rgba(36, 220, 120, 0.66);
+}
+
+.setup-rank-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid rgba(74, 94, 124, 0.45);
+}
+
+.setup-rank-heading h3 {
+  margin: 4px 0 2px;
+  color: #f4f8fc;
+  font-size: 1.18rem;
+}
+
+.setup-rank-heading h3 span {
+  margin-left: 7px;
+  color: #9eb0c5;
+  font-size: 0.7rem;
+}
+
+.setup-rank-heading > div > small {
+  color: #8fa2b9;
+  font-size: 0.65rem;
+  font-weight: 750;
+}
+
+.setup-rank-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.setup-rank-check {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 53px;
+  padding: 7px 9px;
+  border: 1px solid rgba(69, 91, 121, 0.62);
+  border-radius: 11px;
+  background: rgba(17, 31, 51, 0.84);
+}
+
+.setup-rank-check > span {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 950;
+}
+
+.setup-rank-check > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.setup-rank-check strong {
+  color: #edf4fa;
+  font-size: 0.7rem;
+}
+
+.setup-rank-check small {
+  color: #91a4ba;
+  font-size: 0.59rem;
+  line-height: 1.25;
+}
+
+.setup-rank-check > b {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.setup-rank-check.passed { border-color: rgba(36, 220, 120, 0.34); }
+.setup-rank-check.passed > span { background: rgba(36, 220, 120, 0.16); color: #69e9a8; }
+.setup-rank-check.passed > b { color: #69e9a8; }
+.setup-rank-check.failed { border-color: rgba(255, 91, 104, 0.5); background: rgba(55, 22, 33, 0.84); }
+.setup-rank-check.failed > span { background: rgba(255, 91, 104, 0.16); color: #ff9ca5; }
+.setup-rank-check.failed > b { color: #ff9ca5; }
+
+@media (max-width: 760px) {
+  .setup-rank-overlay {
+    position: fixed;
+    inset: 8px;
+  }
+
+  .setup-rank-dialog {
+    overflow-y: auto;
+  }
+
+  .setup-rank-checks {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 620px) {
   .trade-replay-detail-grid,
   .trade-replay-notes {
