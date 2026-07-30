@@ -34,7 +34,8 @@ const DEFAULT_OPTIONS = {
   htfPoiBackedBy: ["SC OB", "FVG", "IFVG", "Breaker Block", "Liq Sweep", "Previous Day High / Low Sweep"],
   tradeComments: [
     "Good Trade",
-    "Went TP Without Triggering the Adjusted RR"
+    "Went TP Without Triggering the Adjusted RR",
+    "Went to the ERL but our RR"
   ]
 };
 
