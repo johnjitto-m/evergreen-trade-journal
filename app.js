@@ -2214,6 +2214,15 @@ function reviewBasicField(label, value, modifier = "") {
   </div>`;
 }
 
+function replayDataRow(label, value, modifier = "") {
+  const values = getComparableValues(value);
+  const display = values.length ? values.join(", ") : "Not recorded";
+  return `<div class="replay-data-row ${escapeAttribute(modifier)}">
+    <span>${escapeHtml(label)}</span>
+    <strong>${escapeHtml(display)}</strong>
+  </div>`;
+}
+
 function getMatchingOutcomeLink(analysis, tradeResult) {
   const links = (analysis?.chartLinks || []).filter((item) => item?.url && item?.label);
   const result = String(tradeResult || "").trim().toUpperCase();
@@ -2318,18 +2327,62 @@ function reviewChartWorkspace(trade) {
       label: "Day",
       title: "Day Time Frame",
       analysis: { chartLinks: trade.htfAnalysis?.dayChartLinks || [] },
-      options: {}
+      options: {},
+      dataTitle: "Day context",
+      dataSubtitle: "Plan before execution",
+      data: [
+        ["Timeframes", `${trade.htf || "—"} / ${trade.ltf || "—"}`],
+        ["Entry Attempt", trade.entryAttempt],
+        ["Day Bias", getTradeField(trade, "dayBias")],
+        ["Day Bias Pros", getTradeField(trade, "dayBiasPros")],
+        ["Day Bias Cons", getTradeField(trade, "dayBiasCons")]
+      ]
     },
-    { key: "htf", label: "HTF", title: "HTF Charts", analysis: trade.htfAnalysis, options: {} },
+    {
+      key: "htf",
+      label: "HTF",
+      title: "HTF Charts",
+      analysis: trade.htfAnalysis,
+      options: {},
+      dataTitle: "HTF analysis",
+      dataSubtitle: "Setup and confirmation",
+      data: [
+        ["FVG Status", trade.fvgStatus],
+        ["SMT", getTradeField(trade, "hasSmt") === "Yes"
+          ? ["Yes", getTradeField(trade, "smtStrength"), getTradeField(trade, "smtPair")]
+          : getTradeField(trade, "hasSmt")],
+        ["Clean HTF CISD", getTradeField(trade, "cleanHtfCisd") === "Yes"
+          ? ["Yes", getTradeField(trade, "htfCisdLocation")]
+          : getTradeField(trade, "cleanHtfCisd")],
+        ["FVG Formed", getTradeField(trade, "fvgFormed")],
+        ["FVG Third Candle", getTradeField(trade, "thirdCandle")],
+        ["FVG Mitigation / Sweep", getTradeField(trade, "fvgInteraction")],
+        ["Premium / Discount", getTradeField(trade, "poiZone")],
+        ["POI Backed By", getTradeField(trade, "htfPoiBackedBy")],
+        ["POI Mitigation Behavior", getTradeField(trade, "poiMitigation")]
+      ]
+    },
     {
       key: "ltf",
       label: "LTF",
       title: "LTF Charts",
       analysis: trade.ltfAnalysis,
-      options: { preferredLink: getMatchingOutcomeLink(trade.ltfAnalysis, trade.result) }
+      options: { preferredLink: getMatchingOutcomeLink(trade.ltfAnalysis, trade.result) },
+      dataTitle: "LTF execution",
+      dataSubtitle: "Entry, management and outcome",
+      data: [
+        ["Entry Option", getTradeField(trade, "entryLevel")],
+        ["Stop-loss Pips", trade.slPips ?? trade.ltfAnalysis?.slPips],
+        ["Break Even Level", getTradeField(trade, "beLogic")],
+        ["Entry Adjusted for RR", getTradeField(trade, "rrAdjusted")],
+        ["Entry Trigger", getTradeField(trade, "entryTrigger")],
+        ["Result", trade.result],
+        ["Risk / Reward", optionalNumber(trade.rr) === null ? "Not recorded" : `${optionalNumber(trade.rr).toFixed(2)}R`],
+        ["About the Trade", getTradeField(trade, "tradeComments")]
+      ]
     }
   ];
-  const firstActive = charts.find((chart) => getReviewChartPreview(chart.analysis, chart.options))?.key || "day";
+  const firstActive = "day";
   const totalLinks = charts.reduce(
     (count, chart) => count + (chart.analysis?.chartLinks || []).filter((item) => item?.url).length,
     0
@@ -2342,7 +2395,19 @@ function reviewChartWorkspace(trade) {
   `).join("");
   const panes = charts.map((chart) => `
     <div class="review-chart-pane" role="tabpanel" data-review-chart-pane="${chart.key}"${chart.key === firstActive ? "" : " hidden"}>
-      ${reviewChartPanel(chart.title, chart.analysis, chart.key, chart.options)}
+      <div class="review-replay-pane-grid">
+        ${reviewChartPanel(chart.title, chart.analysis, chart.key, chart.options)}
+        <aside class="review-tab-data">
+          <div class="review-tab-data-heading">
+            <p class="section-label">${escapeHtml(chart.label)} DATA</p>
+            <h3>${escapeHtml(chart.dataTitle)}</h3>
+            <span>${escapeHtml(chart.dataSubtitle)}</span>
+          </div>
+          <div class="review-tab-data-list">
+            ${chart.data.map(([label, value]) => replayDataRow(label, value)).join("")}
+          </div>
+        </aside>
+      </div>
     </div>
   `).join("");
 
@@ -2352,7 +2417,7 @@ function reviewChartWorkspace(trade) {
         <p class="section-label">CHART WORKSPACE</p>
         <h3>Trade References</h3>
       </div>
-      <span>${totalLinks} link${totalLinks === 1 ? "" : "s"}</span>
+      <span>${totalLinks} chart${totalLinks === 1 ? "" : "s"}</span>
     </div>
     <div class="review-chart-tabs" role="tablist" aria-label="Chart timeframe">${tabs}</div>
     <div class="review-chart-panes">${panes}</div>
@@ -2368,21 +2433,15 @@ function openTradeDetail(trade) {
   const pnlTone = pnlNumber === null ? "" : pnlNumber > 0 ? "is-positive" : pnlNumber < 0 ? "is-negative" : "";
   const outcomeTone = trade.result === "TP" ? "answer-positive" : trade.result === "SL" ? "answer-negative" : trade.result === "BE" ? "answer-neutral" : "";
 
-  const smtAnswer = getTradeField(trade, "hasSmt") === "Yes"
-    ? ["Yes", getTradeField(trade, "smtStrength"), getTradeField(trade, "smtPair")]
-    : getTradeField(trade, "hasSmt");
-  const cleanCisdAnswer = getTradeField(trade, "cleanHtfCisd") === "Yes"
-    ? ["Yes", getTradeField(trade, "htfCisdLocation")]
-    : getTradeField(trade, "cleanHtfCisd");
   elements.tradeDetailTitle.textContent = `${trade.pair || "Trade"} · ${dateText}`;
   elements.tradeDetailContent.innerHTML = `
-    <div class="trade-view-shell">
-      <section class="trade-view-basic-panel trade-view-overview">
+    <div class="trade-view-shell trade-replay-shell">
+      <section class="trade-view-basic-panel trade-view-overview trade-replay-hero">
         <div class="trade-view-overview-primary">
           <div class="trade-view-identity">
-            <p class="section-label">BASIC TRADE INFORMATION</p>
+            <p class="section-label">TRADE REPLAY</p>
             <h3>${escapeHtml(trade.pair || "Trade")}</h3>
-            <p>${escapeHtml(dateText)} <span>·</span> ${escapeHtml(dayText)}</p>
+            <p>${escapeHtml(dateText)} <span>·</span> ${escapeHtml(dayText)} <span>·</span> ${escapeHtml(trade.session || "Session not recorded")}</p>
             <div class="trade-view-title-pills">
               <span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction || "—")}</span>
               <span class="pill pill-status">${escapeHtml(trade.status || "—")}</span>
@@ -2395,53 +2454,9 @@ function openTradeDetail(trade) {
             ${reviewMetric("Result", trade.result || "Pending", outcomeTone)}
           </div>
         </div>
-        <div class="trade-view-basic-grid trade-view-basic-grid--secondary">
-          ${reviewBasicField("Session", trade.session)}
-          ${reviewBasicField("HTF / LTF", `${trade.htf || "—"} / ${trade.ltf || "—"}`)}
-          ${reviewBasicField("Entry Attempt", trade.entryAttempt)}
-          ${reviewBasicField("FVG Status", trade.fvgStatus)}
-          ${reviewBasicField("Day Bias", getTradeField(trade, "dayBias"))}
-          ${reviewBasicField("Day Bias Pros", getTradeField(trade, "dayBiasPros"))}
-          ${reviewBasicField("Day Bias Cons", getTradeField(trade, "dayBiasCons"))}
-        </div>
       </section>
 
-      <div class="trade-view-board">
-          <section class="review-analysis-panel review-analysis-panel--htf">
-            <div class="trade-view-section-heading compact-heading">
-              <div>
-                <p class="section-label">HTF ANALYSIS</p>
-              </div>
-            </div>
-            <div class="review-question-grid review-question-grid--htf">
-              ${reviewQuestionCard("1", "SMT", smtAnswer)}
-              ${reviewQuestionCard("2", "HTF CLEAN CISD", cleanCisdAnswer)}
-              ${reviewQuestionCard("3", "FVG FORMED", getTradeField(trade, "fvgFormed"))}
-              ${reviewQuestionCard("4", "FVG'S THIRD CANDLE", getTradeField(trade, "thirdCandle"))}
-              ${reviewQuestionCard("5", "FVG MITIGATION / SWEEP", getTradeField(trade, "fvgInteraction"))}
-              ${reviewQuestionCard("6", "PREMIUM / DISCOUNT", getTradeField(trade, "poiZone"))}
-              ${reviewQuestionCard("7", "POI BACKED BY", getTradeField(trade, "htfPoiBackedBy"))}
-              ${reviewQuestionCard("8", "POI MITIGATION BEHAVIOR", getTradeField(trade, "poiMitigation"))}
-            </div>
-          </section>
-
-          <section class="review-analysis-panel review-analysis-panel--ltf">
-            <div class="trade-view-section-heading compact-heading">
-              <div>
-                <p class="section-label">LTF ANALYSIS</p>
-              </div>
-            </div>
-            <div class="review-question-grid review-question-grid--ltf">
-              ${reviewQuestionCard("1", "ENTRY OPTION", getTradeField(trade, "entryLevel"))}
-              ${reviewQuestionCard("2", "STOP-LOSS PIPS", trade.slPips ?? trade.ltfAnalysis?.slPips)}
-              ${reviewQuestionCard("3", "BREAK EVEN LEVEL", getTradeField(trade, "beLogic"))}
-              ${reviewQuestionCard("4", "Entry ADJUSTED FOR RR", getTradeField(trade, "rrAdjusted"))}
-              ${reviewQuestionCard("5", "ENTERY TRIGGER BY ANYTHING", getTradeField(trade, "entryTrigger"))}
-              ${reviewQuestionCard("6", "ABOUT THE TRADE", getTradeField(trade, "tradeComments"))}
-            </div>
-          </section>
-          ${reviewChartWorkspace(trade)}
-      </div>
+      <div class="trade-replay-body">${reviewChartWorkspace(trade)}</div>
     </div>
   `;
   elements.tradeDetailModal.hidden = false;
