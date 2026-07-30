@@ -10,7 +10,7 @@
     <title>Evergreen Trade Journal</title>
     <link href="manifest.webmanifest" rel="manifest" />
     <link href="icons/icon-192.png" rel="icon" />
-    <link href="styles.css?v=49" rel="stylesheet" />
+    <link href="styles.css?v=54" rel="stylesheet" />
 </head>
 
 <body>
@@ -321,10 +321,30 @@
                         </select>
                     </label>
                     <label class="filter-field">
+                        <span>RR Adjusted</span>
+                        <select data-filter-key="rrAdjusted" id="filterRrAdjusted">
+                            <option value="">Any RR Adjustment</option>
+                        </select>
+                    </label>
+                    <label class="filter-field">
+                        <span>Entry Trigger</span>
+                        <select data-filter-key="entryTrigger" id="filterEntryTrigger">
+                            <option value="">Any Entry Trigger</option>
+                        </select>
+                    </label>
+                    <label class="filter-field">
                         <span>Trade Comments</span>
                         <select data-filter-key="tradeComments" id="filterTradeComments">
                             <option value="">Any Trade Comment</option>
                         </select>
+                    </label>
+                    <label class="filter-field">
+                        <span>SL Pips Min</span>
+                        <input id="filterSlPipsMin" inputmode="decimal" min="0" placeholder="Example: 10" step="0.1" type="number" />
+                    </label>
+                    <label class="filter-field">
+                        <span>SL Pips Max</span>
+                        <input id="filterSlPipsMax" inputmode="decimal" min="0" placeholder="No maximum" step="0.1" type="number" />
                     </label>
                     <label class="filter-field">
                         <span>From</span>
@@ -769,7 +789,7 @@
                             </fieldset>
                             <fieldset class="analysis-question-card">
                                 <legend class="section-label">ENTRY OPTION</legend>
-                                <div class="choice-grid choice-grid-2 compact-choices">
+                                <div class="choice-grid choice-grid-3 compact-choices">
                                     <label class="choice-card">
                                         <input name="entryLevel" type="radio" value="CISD" />
                                         <strong>CISD</strong>
@@ -777,6 +797,10 @@
                                     <label class="choice-card">
                                         <input name="entryLevel" type="radio" value="BREAKER BLOCK" />
                                         <strong>BREAKER BLOCK</strong>
+                                    </label>
+                                    <label class="choice-card">
+                                        <input name="entryLevel" type="radio" value="PCL CISD" />
+                                        <strong>PCL CISD</strong>
                                     </label>
                                 </div>
                             </fieldset>
@@ -797,36 +821,64 @@
                                     </label>
                                 </div>
                             </fieldset>
-                            <fieldset class="analysis-question-card">
-                                <legend class="section-label">TRADE OUTCOME</legend>
-                                <div class="choice-grid choice-grid-3 compact-choices">
+                            <fieldset class="analysis-question-card rr-adjusted-card">
+                                <legend class="section-label">RR ADJUSTED FOR RR</legend>
+                                <div class="choice-grid choice-grid-2 compact-choices">
                                     <label class="choice-card">
-                                        <input name="result" type="radio" value="BE" />
-                                        <strong>BE</strong>
+                                        <input name="rrAdjusted" type="radio" value="Yes (3.5RR)" />
+                                        <strong>YES (3.5RR)</strong>
                                     </label>
                                     <label class="choice-card">
-                                        <input name="result" type="radio" value="SL" />
-                                        <strong>SL</strong>
-                                    </label>
-                                    <label class="choice-card">
-                                        <input name="result" type="radio" value="TP" />
-                                        <strong>TP</strong>
+                                        <input name="rrAdjusted" type="radio" value="No" />
+                                        <strong>NO</strong>
                                     </label>
                                 </div>
-                                <div class="outcome-fields">
-                                    <label class="number-field">
-                                        <span>Risk $</span>
-                                        <input id="riskAmount" inputmode="decimal" min="0" name="riskAmount"
-                                            placeholder="50" step="0.01" type="number" value="50" />
-                                    </label>
-                                    <label class="number-field">
-                                        <span>RR</span>
-                                        <input id="riskReward" inputmode="decimal" min="0" name="riskReward"
-                                            placeholder="4" step="0.01" type="number" />
-                                    </label>
-                                    <div class="calculated-pnl">
-                                        <strong id="calculatedPnl">$0.00</strong>
+                            </fieldset>
+                            <fieldset class="analysis-question-card">
+                                <legend class="section-label">TRADE OUTCOME</legend>
+                                <div class="trade-outcome-controls">
+                                    <div class="choice-grid choice-grid-3 compact-choices">
+                                        <label class="choice-card">
+                                            <input name="result" type="radio" value="BE" />
+                                            <strong>BE</strong>
+                                        </label>
+                                        <label class="choice-card">
+                                            <input name="result" type="radio" value="SL" />
+                                            <strong>SL</strong>
+                                        </label>
+                                        <label class="choice-card">
+                                            <input name="result" type="radio" value="TP" />
+                                            <strong>TP</strong>
+                                        </label>
                                     </div>
+                                    <div class="outcome-fields">
+                                        <label class="number-field">
+                                            <span>Risk $</span>
+                                            <input id="riskAmount" inputmode="decimal" min="0" name="riskAmount"
+                                                placeholder="50" step="0.01" type="number" value="50" />
+                                        </label>
+                                        <label class="number-field">
+                                            <span>RR</span>
+                                            <input id="riskReward" inputmode="decimal" min="0" name="riskReward"
+                                                placeholder="4" step="0.01" type="number" />
+                                        </label>
+                                        <div class="calculated-pnl">
+                                            <strong id="calculatedPnl">$0.00</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <fieldset class="analysis-question-card entry-trigger-card">
+                                <legend class="section-label">ENTRY TRIGGER</legend>
+                                <div class="choice-grid choice-grid-2 compact-choices">
+                                    <label class="choice-card">
+                                        <input name="entryTrigger" type="radio" value="None" />
+                                        <strong>NONE</strong>
+                                    </label>
+                                    <label class="choice-card">
+                                        <input name="entryTrigger" type="radio" value="Coming From Counter FVG" />
+                                        <strong>COMING FROM COUNTER FVG</strong>
+                                    </label>
                                 </div>
                             </fieldset>
                             <fieldset class="analysis-question-card ltf-trade-comments-card">
@@ -927,9 +979,9 @@
     </div>
     <div aria-live="polite" class="toast" id="toast" role="status"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=49"></script>
-    <script src="supabase-sync.js?v=49"></script>
-    <script src="app.js?v=49"></script>
+    <script src="supabase-config.js?v=54"></script>
+    <script src="supabase-sync.js?v=51"></script>
+    <script src="app.js?v=54"></script>
 </body>
 
 </html>

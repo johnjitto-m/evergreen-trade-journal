@@ -161,7 +161,7 @@ JWT secret
 
 ## Entry-level multi-select update
 
-The LTF entry option is a single choice between CISD and BREAKER BLOCK. Existing Spartan CISD and BB values are migrated to the new labels. If HTF FVG interaction is set to **Sweep**, **CISD** is automatically selected.
+The LTF entry option is a single choice between CISD, BREAKER BLOCK, and PCL CISD. Existing Spartan CISD and BB values are migrated to the new labels. If HTF FVG interaction is set to **Sweep**, **CISD** is automatically selected.
 
 ## Weekly table alignment fix
 

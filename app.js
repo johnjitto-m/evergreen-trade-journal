@@ -211,6 +211,8 @@ const elements = {
   edgeCards: document.querySelector("#edgeCards"),
   filterGrid: document.querySelector("#filterGrid"),
   filterSearch: document.querySelector("#filterSearch"),
+  filterSlPipsMin: document.querySelector("#filterSlPipsMin"),
+  filterSlPipsMax: document.querySelector("#filterSlPipsMax"),
   filterDateFrom: document.querySelector("#filterDateFrom"),
   filterDateTo: document.querySelector("#filterDateTo"),
   filterSort: document.querySelector("#filterSort"),
@@ -977,7 +979,7 @@ function normaliseEntryLevel(value) {
     if (entry === "Spartan CISD") return "CISD";
     if (entry === "BB" || entry.toLowerCase() === "breaker block") return "BREAKER BLOCK";
     return entry;
-  }).find((entry) => ["CISD", "BREAKER BLOCK"].includes(entry)) || "";
+  }).find((entry) => ["CISD", "BREAKER BLOCK", "PCL CISD"].includes(entry)) || "";
 }
 
 function applySweepEntryDefault() {
@@ -999,6 +1001,8 @@ function captureLtfForm() {
     entryLevel: formData.get("entryLevel") || "",
     slPips: formData.get("slPips") || "",
     beLogic: formData.get("beLogic") || "",
+    rrAdjusted: formData.get("rrAdjusted") || "",
+    entryTrigger: formData.get("entryTrigger") || "",
     result: formData.get("result") || "",
     riskAmount: formData.get("riskAmount") || "",
     riskReward: formData.get("riskReward") || "",
@@ -1728,7 +1732,7 @@ function updateChartPreview(type) {
 const RESEARCH_FILTER_KEYS = [
   "direction", "status", "pair", "result", "session", "htf", "entryAttempt", "fvgStatus",
   "fvgFormed", "dayBias", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "thirdCandle", "fvgInteraction",
-  "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "tradeComments"
+  "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "rrAdjusted", "entryTrigger", "tradeComments"
 ];
 
 const INSIGHT_LABELS = {
@@ -1751,6 +1755,8 @@ const INSIGHT_LABELS = {
   htfPoiBackedBy: "HTF POI backing",
   entryLevel: "Entry level",
   beLogic: "BE logic",
+  rrAdjusted: "RR adjusted for RR",
+  entryTrigger: "Entry trigger",
   tradeComments: "Trade comments"
 };
 
@@ -1772,6 +1778,8 @@ function getTradeField(trade, key) {
     htfPoiBackedBy: trade.htfAnalysis?.htfPoiBackedBy,
     entryLevel: normaliseEntryLevel(trade.ltfAnalysis?.entryLevel),
     beLogic: trade.ltfAnalysis?.beLogic,
+    rrAdjusted: trade.ltfAnalysis?.rrAdjusted,
+    entryTrigger: trade.ltfAnalysis?.entryTrigger,
     tradeComments: trade.ltfAnalysis?.tradeComments
   };
   return Object.prototype.hasOwnProperty.call(nested, key) ? nested[key] : trade[key];
@@ -1807,6 +1815,8 @@ function populateFilterOptions() {
 function collectResearchFilters() {
   const filters = {
     search: elements.filterSearch.value.trim().toLowerCase(),
+    slPipsMin: elements.filterSlPipsMin.value,
+    slPipsMax: elements.filterSlPipsMax.value,
     dateFrom: elements.filterDateFrom.value,
     dateTo: elements.filterDateTo.value,
     sort: elements.filterSort.value
@@ -1835,6 +1845,8 @@ function tradeSearchText(trade) {
     ...getComparableValues(getTradeField(trade, "htfPoiBackedBy")),
     ...getComparableValues(getTradeField(trade, "entryLevel")),
     getTradeField(trade, "beLogic"),
+    getTradeField(trade, "rrAdjusted"),
+    getTradeField(trade, "entryTrigger"),
     ...getComparableValues(getTradeField(trade, "tradeComments"))
   ];
   return values.filter(Boolean).join(" ").toLowerCase();
@@ -1846,6 +1858,9 @@ function getFilteredTrades() {
     if (filters.search && !tradeSearchText(trade).includes(filters.search)) return false;
     if (filters.dateFrom && String(trade.date || "") < filters.dateFrom) return false;
     if (filters.dateTo && String(trade.date || "") > filters.dateTo) return false;
+    const slPips = optionalNumber(trade.slPips ?? trade.ltfAnalysis?.slPips);
+    if (filters.slPipsMin !== "" && (slPips === null || slPips < Number(filters.slPipsMin))) return false;
+    if (filters.slPipsMax !== "" && (slPips === null || slPips > Number(filters.slPipsMax))) return false;
 
     return RESEARCH_FILTER_KEYS.every((key) => {
       const selected = filters[key];
@@ -1868,7 +1883,7 @@ function getFilteredTrades() {
 function activeResearchFilterCount() {
   const filters = collectResearchFilters();
   return [
-    filters.search, filters.dateFrom, filters.dateTo,
+    filters.search, filters.slPipsMin, filters.slPipsMax, filters.dateFrom, filters.dateTo,
     ...RESEARCH_FILTER_KEYS.map((key) => filters[key])
   ].filter(Boolean).length;
 }
@@ -1919,7 +1934,7 @@ function mostCommonInsight(subset, key) {
 }
 
 function renderSimilarityList(container, subset) {
-  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "dayBias", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "tradeComments"];
+  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "dayBias", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "rrAdjusted", "entryTrigger", "tradeComments"];
   const insights = insightKeys.map((key) => mostCommonInsight(subset, key)).filter(Boolean).slice(0, 6);
   if (!insights.length) {
     container.innerHTML = '<p class="empty-insight">Not enough recorded trades for a similarity pattern.</p>';
@@ -1988,6 +2003,8 @@ function renderEdgeCards(filtered) {
     ["BEST HTF POI BACKING", "htfPoiBackedBy", false],
     ["BEST ENTRY LEVEL", "entryLevel", false],
     ["BEST BE LOGIC", "beLogic", false],
+    ["BEST RR ADJUSTMENT", "rrAdjusted", false],
+    ["BEST ENTRY TRIGGER", "entryTrigger", false],
     ["WORST MITIGATION", "poiMitigation", true]
   ];
   elements.edgeCards.innerHTML = definitions.map(([title, key, worst]) => {
@@ -2090,6 +2107,8 @@ function showPage(view) {
 
 function clearResearchFilters() {
   elements.filterSearch.value = "";
+  elements.filterSlPipsMin.value = "";
+  elements.filterSlPipsMax.value = "";
   elements.filterDateFrom.value = "";
   elements.filterDateTo.value = "";
   elements.filterSort.value = "newest";
@@ -2362,8 +2381,10 @@ function openTradeDetail(trade) {
               ${reviewQuestionCard("1", "Which entry level was used?", getTradeField(trade, "entryLevel"))}
               ${reviewQuestionCard("2", "How much is the SL pips?", trade.slPips ?? trade.ltfAnalysis?.slPips)}
               ${reviewQuestionCard("3", "What was the BE logic?", getTradeField(trade, "beLogic"))}
-              ${reviewQuestionCard("4", "Trade outcome", outcomeAnswer, "", outcomeTone)}
-              ${reviewQuestionCard("5", "Comments about the trade", getTradeField(trade, "tradeComments"))}
+              ${reviewQuestionCard("4", "RR adjusted for RR", getTradeField(trade, "rrAdjusted"))}
+              ${reviewQuestionCard("5", "Trade outcome", outcomeAnswer, "", outcomeTone)}
+              ${reviewQuestionCard("6", "What was the entry trigger?", getTradeField(trade, "entryTrigger"))}
+              ${reviewQuestionCard("7", "Comments about the trade", getTradeField(trade, "tradeComments"))}
             </div>
           </section>
         </div>
@@ -2608,7 +2629,7 @@ function exportCsv() {
   const headers = [
     "date", "pair", "direction", "status", "entryAttempt", "fvgStatus", "fvgFormed",
     "dayBias", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "smtPair", "thirdCandle",
-    "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "slPips", "beLogic", "tradeComments", "result", "riskAmount", "rr", "pnl"
+    "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "slPips", "beLogic", "rrAdjusted", "entryTrigger", "tradeComments", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
@@ -2628,6 +2649,8 @@ function exportCsv() {
       htfPoiBackedBy: getComparableValues(trade.htfAnalysis?.htfPoiBackedBy).join(" | "),
       entryLevel: getComparableValues(trade.ltfAnalysis?.entryLevel).join(" | "),
       beLogic: trade.ltfAnalysis?.beLogic,
+      rrAdjusted: trade.ltfAnalysis?.rrAdjusted,
+      entryTrigger: trade.ltfAnalysis?.entryTrigger,
       tradeComments: getComparableValues(trade.ltfAnalysis?.tradeComments).join(" | ")
     };
     return headers.map((key) => csvCell(flat[key])).join(",");
