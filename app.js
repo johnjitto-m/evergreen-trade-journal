@@ -2536,10 +2536,10 @@ function renderTrades() {
       year: "numeric"
     }).format(date).replaceAll("/", "-");
     const dayText = trade.day || new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
-    const hasSmt = getTradeField(trade, "hasSmt") === "Yes";
-    const smtStrength = hasSmt
-      ? String(getTradeField(trade, "smtStrength") || "").replace(/\s*SMT$/i, "")
-      : "";
+    const hasSmtAnswer = getTradeField(trade, "hasSmt");
+    const smtDisplay = hasSmtAnswer === "Yes"
+      ? String(getTradeField(trade, "smtStrength") || "Yes").replace(/\s*SMT$/i, "")
+      : hasSmtAnswer || "—";
 
     const row = document.createElement("tr");
     row.dataset.tradeId = trade.id;
@@ -2552,7 +2552,7 @@ function renderTrades() {
       <td>${escapeHtml(getTradeField(trade, "dayBias") || "—")}</td>
       <td><span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction)}</span></td>
       <td><span class="pill ${poiZoneClass(getTradeField(trade, "poiZone"))}">${escapeHtml(getTradeField(trade, "poiZone") || "—")}</span></td>
-      <td>${escapeHtml(smtStrength)}</td>
+      <td>${escapeHtml(smtDisplay)}</td>
       <td>${escapeHtml(trade.entryAttempt || "—")}</td>
       <td class="dashboard-entry-cell">
         <span class="pill ${trade.status === "Took Trade" ? "pill-entry-took" : "pill-entry-not-taken"}">${escapeHtml(trade.status === "Took Trade" ? "Took" : "Not Taken")}</span>
