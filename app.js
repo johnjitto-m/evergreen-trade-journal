@@ -1819,7 +1819,14 @@ function getTradeSetupRank(trade) {
   const poiBacking = getComparableValues(getTradeField(trade, "htfPoiBackedBy"));
   const poiMitigation = getComparableValues(getTradeField(trade, "poiMitigation"));
   const hasPro = (expected) => dayBiasPros.some((value) => value.toLowerCase() === expected.toLowerCase());
-  const hasMitigation = (expected) => poiMitigation.some((value) => value.toLowerCase() === expected.toLowerCase());
+  const mitigationCons = [
+    "Coming After Creating a Counter FVG",
+    "Coming from Out of session Counter FVG mitigation",
+    "Coming from Counter OFS active trade"
+  ];
+  const selectedMitigationCons = poiMitigation.filter((value) =>
+    mitigationCons.some((con) => con.toLowerCase() === value.toLowerCase())
+  );
 
   const biasAligned = (direction === "Long" && dayBias === "Buy")
     || (direction === "Short" && dayBias === "Sell");
@@ -1842,7 +1849,7 @@ function getTradeSetupRank(trade) {
     { label: "Third Candle", passed: getTradeField(trade, "thirdCandle") === "Positive", detail: getTradeField(trade, "thirdCandle") === "Positive" ? "Positive and aligned with bias" : `${getTradeField(trade, "thirdCandle") || "Not recorded"}; must be Positive` },
     { label: "Clean HTF CISD", passed: hasCleanCisd, detail: hasCleanCisd ? getTradeField(trade, "htfCisdLocation") || "Confirmed" : "HTF CISD must be Yes" },
     { label: "POI Backing", passed: poiBacking.length > 0, detail: poiBacking.length ? poiBacking.join(", ") : "At least one POI backing is required" },
-    { label: "POI Mitigation Behaviour", passed: poiMitigation.length === 1 && hasMitigation("None"), detail: poiMitigation.length === 1 && hasMitigation("None") ? "None" : `${poiMitigation.join(", ") || "Not recorded"}; A+ requires only None` },
+    { label: "POI Mitigation Cons", passed: selectedMitigationCons.length === 0, detail: selectedMitigationCons.length === 0 ? `${poiMitigation.join(", ") || "No behaviour selected"}; no grading Cons` : `${selectedMitigationCons.join(", ")} counted as ${selectedMitigationCons.length === 1 ? "a Con" : "Cons"}` },
     { label: "Entry Option", passed: isBreakerBlock, detail: isBreakerBlock ? "Breaker Block" : `${getTradeField(trade, "entryLevel") || "Not recorded"}; A+ requires Breaker Block` }
   ];
   const score = checks.filter((check) => check.passed).length;
