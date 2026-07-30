@@ -1,11 +1,11 @@
-const CACHE_NAME = "evergreen-trade-journal-v75";
+const CACHE_NAME = "evergreen-trade-journal-v80";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./styles.css?v=75",
-  "./supabase-config.js?v=75",
+  "./styles.css?v=80",
+  "./supabase-config.js?v=80",
   "./supabase-sync.js?v=51",
-  "./app.js?v=75",
+  "./app.js?v=80",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

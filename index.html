@@ -10,7 +10,7 @@
     <title>Evergreen Trade Journal</title>
     <link href="manifest.webmanifest" rel="manifest" />
     <link href="icons/icon-192.png" rel="icon" />
-    <link href="styles.css?v=75" rel="stylesheet" />
+    <link href="styles.css?v=80" rel="stylesheet" />
 </head>
 
 <body>
@@ -19,7 +19,6 @@
     <main class="app-shell">
         <header class="topbar">
             <div>
-                <p class="eyebrow">EVERGREEN SETUP RESEARCH JOURNAL</p>
                 <h1>Evergreen Trade Journal</h1>
                 <p class="subtitle">Track Evergreen trade setups and find the pattern behind wins, losses, and missed
                     opportunities.</p>
@@ -60,9 +59,11 @@
                     <p>THIS WEEK TRADES</p>
                     <strong id="weekTrades">0</strong>
                 </article>
-                <article class="stat-card panel">
-                    <p>THIS WEEK AVG RR</p>
-                    <strong id="weekAvgRr">0.00R</strong>
+                <article aria-label="Highlight weekly trades sharing the winning edge" aria-pressed="false"
+                    class="stat-card panel winning-edge-stat" id="weekWinningEdgeCard" role="button" tabindex="0">
+                    <p>THIS WEEK WINNING EDGE</p>
+                    <strong id="weekWinningEdge">Need 2 TP trades</strong>
+                    <small id="weekWinningEdgeNote">No weekly winning pattern yet</small>
                 </article>
             </section>
             <section class="journal-panel panel">
@@ -977,9 +978,9 @@
     </div>
     <div aria-live="polite" class="toast" id="toast" role="status"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=75"></script>
+    <script src="supabase-config.js?v=80"></script>
     <script src="supabase-sync.js?v=51"></script>
-    <script src="app.js?v=75"></script>
+    <script src="app.js?v=80"></script>
 </body>
 
 </html>

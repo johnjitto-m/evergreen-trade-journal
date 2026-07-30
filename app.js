@@ -171,7 +171,9 @@ const elements = {
   weekPnl: document.querySelector("#weekPnl"),
   weekWinRate: document.querySelector("#weekWinRate"),
   weekTrades: document.querySelector("#weekTrades"),
-  weekAvgRr: document.querySelector("#weekAvgRr"),
+  weekWinningEdge: document.querySelector("#weekWinningEdge"),
+  weekWinningEdgeNote: document.querySelector("#weekWinningEdgeNote"),
+  weekWinningEdgeCard: document.querySelector("#weekWinningEdgeCard"),
   weekRange: document.querySelector("#weekRange"),
   toast: document.querySelector("#toast"),
   backupBtn: document.querySelector("#backupBtn"),
@@ -2288,6 +2290,54 @@ function reviewChartPanel(title, analysis, tone = "htf", options = {}) {
   </section>`;
 }
 
+function reviewChartWorkspace(trade) {
+  const charts = [
+    {
+      key: "day",
+      label: "Day",
+      title: "Day Time Frame",
+      analysis: { chartLinks: trade.htfAnalysis?.dayChartLinks || [] },
+      options: {}
+    },
+    { key: "htf", label: "HTF", title: "HTF Charts", analysis: trade.htfAnalysis, options: {} },
+    {
+      key: "ltf",
+      label: "LTF",
+      title: "LTF Charts",
+      analysis: trade.ltfAnalysis,
+      options: { preferredLink: getMatchingOutcomeLink(trade.ltfAnalysis, trade.result) }
+    }
+  ];
+  const firstActive = charts.find((chart) => getReviewChartPreview(chart.analysis, chart.options))?.key || "day";
+  const totalLinks = charts.reduce(
+    (count, chart) => count + (chart.analysis?.chartLinks || []).filter((item) => item?.url).length,
+    0
+  );
+  const tabs = charts.map((chart) => `
+    <button class="review-chart-tab${chart.key === firstActive ? " active" : ""}" type="button" role="tab"
+      data-review-chart-tab="${chart.key}" aria-selected="${chart.key === firstActive}">
+      ${chart.label}
+    </button>
+  `).join("");
+  const panes = charts.map((chart) => `
+    <div class="review-chart-pane" role="tabpanel" data-review-chart-pane="${chart.key}"${chart.key === firstActive ? "" : " hidden"}>
+      ${reviewChartPanel(chart.title, chart.analysis, chart.key, chart.options)}
+    </div>
+  `).join("");
+
+  return `<aside class="review-chart-workspace" aria-label="Saved trade charts">
+    <div class="review-chart-workspace-heading">
+      <div>
+        <p class="section-label">CHART WORKSPACE</p>
+        <h3>Trade References</h3>
+      </div>
+      <span>${totalLinks} link${totalLinks === 1 ? "" : "s"}</span>
+    </div>
+    <div class="review-chart-tabs" role="tablist" aria-label="Chart timeframe">${tabs}</div>
+    <div class="review-chart-panes">${panes}</div>
+  </aside>`;
+}
+
 function openTradeDetail(trade) {
   const { dateText, dayText } = formatTradeDate(trade);
   const rrNumber = optionalNumber(trade.rr);
@@ -2335,16 +2385,7 @@ function openTradeDetail(trade) {
         </div>
       </section>
 
-      <div class="trade-view-main">
-        <aside class="trade-view-chart-column" aria-label="Saved trade charts">
-          ${reviewChartPanel("Day Time Frame", { chartLinks: trade.htfAnalysis?.dayChartLinks || [] }, "day")}
-          ${reviewChartPanel("HTF Charts", trade.htfAnalysis, "htf")}
-          ${reviewChartPanel("LTF Charts", trade.ltfAnalysis, "ltf", {
-            preferredLink: getMatchingOutcomeLink(trade.ltfAnalysis, trade.result)
-          })}
-        </aside>
-
-        <div class="trade-view-analysis-grid">
+      <div class="trade-view-board">
           <section class="review-analysis-panel review-analysis-panel--htf">
             <div class="trade-view-section-heading compact-heading">
               <div>
@@ -2378,7 +2419,7 @@ function openTradeDetail(trade) {
               ${reviewQuestionCard("6", "ABOUT THE TRADE", getTradeField(trade, "tradeComments"))}
             </div>
           </section>
-        </div>
+          ${reviewChartWorkspace(trade)}
       </div>
     </div>
   `;
@@ -2481,6 +2522,9 @@ function renderTrades() {
       : "";
 
     const row = document.createElement("tr");
+    row.dataset.tradeId = trade.id;
+    row.tabIndex = 0;
+    row.setAttribute("aria-label", `View ${trade.pair || "trade"} from ${dateText}`);
     row.innerHTML = `
       <td>${index + 1}</td>
       <td class="date-cell">${dateText}<small>${escapeHtml(dayText)}</small></td>
@@ -2496,7 +2540,6 @@ function renderTrades() {
       <td><span class="pill ${resultClass(trade.result)}">${escapeHtml(trade.result || "—")}</span></td>
       <td>
         <div class="actions-cell">
-          <button class="action-btn" type="button" data-action="view" data-id="${trade.id}">View</button>
           <button class="action-btn" type="button" data-action="edit" data-id="${trade.id}">Edit</button>
           <button class="action-btn delete" type="button" data-action="delete" data-id="${trade.id}">Delete</button>
         </div>
@@ -2534,15 +2577,72 @@ function updateStats(weeklyTrades = trades.filter((trade) => isDateInCurrentWeek
   const completed = counted.filter((trade) => ["TP", "SL", "BE"].includes(trade.result));
   const wins = completed.filter((trade) => trade.result === "TP").length;
   const pnl = completed.reduce((total, trade) => total + Number(trade.pnl || 0), 0);
-  const rrTrades = completed.filter((trade) => Number.isFinite(Number(trade.rr)) && Number(trade.rr) > 0);
-  const avgRr = rrTrades.length
-    ? rrTrades.reduce((total, trade) => total + Number(trade.rr), 0) / rrTrades.length
-    : 0;
+  const winningTrades = completed.filter((trade) => trade.result === "TP");
+  const winningEdgeKeys = [
+    "smtStrength", "fvgInteraction", "poiZone", "htfPoiBackedBy", "poiMitigation",
+    "entryLevel", "beLogic", "entryTrigger", "dayBias", "dayBiasPros"
+  ];
+  const winningEdge = winningTrades.length >= 2
+    ? winningEdgeKeys
+      .map((key, priority) => ({ ...mostCommonInsight(winningTrades, key), priority }))
+      .filter((insight) => insight.value && insight.count >= 2)
+      .sort((a, b) => b.percentage - a.percentage || b.count - a.count || a.priority - b.priority)[0]
+    : null;
 
   elements.weekPnl.textContent = formatCurrency(pnl);
   elements.weekWinRate.textContent = completed.length ? `${((wins / completed.length) * 100).toFixed(1)}%` : "0.0%";
   elements.weekTrades.textContent = String(counted.length);
-  elements.weekAvgRr.textContent = `${avgRr.toFixed(2)}R`;
+  if (winningEdge) {
+    const matchingTradeIds = winningTrades
+      .filter((trade) => getComparableValues(getTradeField(trade, winningEdge.key)).includes(winningEdge.value))
+      .map((trade) => trade.id);
+    elements.weekWinningEdge.textContent = winningEdge.value;
+    elements.weekWinningEdgeNote.textContent = `${INSIGHT_LABELS[winningEdge.key]} · ${winningEdge.percentage}% of ${winningTrades.length} TP trades`;
+    elements.weekWinningEdgeCard.dataset.tradeIds = matchingTradeIds.join(",");
+    elements.weekWinningEdgeCard.dataset.edgeLabel = winningEdge.value;
+    elements.weekWinningEdgeCard.classList.remove("is-highlighting");
+    elements.weekWinningEdgeCard.classList.add("has-winning-edge");
+    elements.weekWinningEdgeCard.setAttribute("aria-pressed", "false");
+  } else if (winningTrades.length < 2) {
+    elements.weekWinningEdge.textContent = "Need 2 TP trades";
+    elements.weekWinningEdgeNote.textContent = `${winningTrades.length} weekly ${winningTrades.length === 1 ? "winner" : "winners"} recorded`;
+    elements.weekWinningEdgeCard.dataset.tradeIds = "";
+    elements.weekWinningEdgeCard.dataset.edgeLabel = "";
+    elements.weekWinningEdgeCard.classList.remove("has-winning-edge", "is-highlighting");
+    elements.weekWinningEdgeCard.setAttribute("aria-pressed", "false");
+  } else {
+    elements.weekWinningEdge.textContent = "No shared pattern";
+    elements.weekWinningEdgeNote.textContent = "Record more setup details to reveal an edge";
+    elements.weekWinningEdgeCard.dataset.tradeIds = "";
+    elements.weekWinningEdgeCard.dataset.edgeLabel = "";
+    elements.weekWinningEdgeCard.classList.remove("has-winning-edge", "is-highlighting");
+    elements.weekWinningEdgeCard.setAttribute("aria-pressed", "false");
+  }
+}
+
+function toggleWeeklyWinningEdgeHighlight() {
+  const tradeIds = (elements.weekWinningEdgeCard.dataset.tradeIds || "").split(",").filter(Boolean);
+  if (!tradeIds.length) {
+    showToast("Add at least two matching TP trades to reveal a weekly winning edge.");
+    return;
+  }
+
+  const shouldHighlight = !elements.weekWinningEdgeCard.classList.contains("is-highlighting");
+  elements.weekWinningEdgeCard.classList.toggle("is-highlighting", shouldHighlight);
+  elements.weekWinningEdgeCard.setAttribute("aria-pressed", String(shouldHighlight));
+  elements.rows.querySelectorAll("tr[data-trade-id]").forEach((row) => {
+    row.classList.toggle("winning-edge-match", shouldHighlight && tradeIds.includes(row.dataset.tradeId));
+  });
+
+  if (!shouldHighlight) {
+    showToast("Winning-edge highlights cleared.");
+    return;
+  }
+
+  const firstMatch = elements.rows.querySelector("tr.winning-edge-match");
+  firstMatch?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const label = elements.weekWinningEdgeCard.dataset.edgeLabel || "winning edge";
+  showToast(`${tradeIds.length} TP ${tradeIds.length === 1 ? "trade shares" : "trades share"} ${label}.`);
 }
 
 function updateWeekRange() {
@@ -2769,9 +2869,16 @@ async function confirmPendingDelete() {
 
 async function handleRowAction(event) {
   const button = event.target.closest("button[data-action]");
-  if (!button) return;
-  const trade = trades.find((item) => item.id === button.dataset.id);
+  const dashboardRow = event.target.closest("#tradeRows tr[data-trade-id]");
+  const tradeId = button?.dataset.id || dashboardRow?.dataset.tradeId;
+  if (!tradeId) return;
+  const trade = trades.find((item) => item.id === tradeId);
   if (!trade) return;
+
+  if (!button && dashboardRow) {
+    openTradeDetail(trade);
+    return;
+  }
 
   if (button.dataset.action === "delete") {
     openDeleteConfirm(trade);
@@ -2917,6 +3024,20 @@ function bindEvents() {
   });
 
   elements.rows.addEventListener("click", handleRowAction);
+  elements.weekWinningEdgeCard.addEventListener("click", toggleWeeklyWinningEdgeHighlight);
+  elements.weekWinningEdgeCard.addEventListener("keydown", (event) => {
+    if (!["Enter", " "].includes(event.key)) return;
+    event.preventDefault();
+    toggleWeeklyWinningEdgeHighlight();
+  });
+  elements.rows.addEventListener("keydown", (event) => {
+    if (!["Enter", " "].includes(event.key) || event.target.closest("button")) return;
+    const row = event.target.closest("tr[data-trade-id]");
+    if (!row) return;
+    event.preventDefault();
+    const trade = trades.find((item) => item.id === row.dataset.tradeId);
+    if (trade) openTradeDetail(trade);
+  });
   elements.researchRows.addEventListener("click", handleRowAction);
   elements.researchMobileList.addEventListener("click", handleRowAction);
   elements.backupBtn.addEventListener("click", exportJson);
@@ -2964,6 +3085,20 @@ function bindEvents() {
     if (event.target === elements.tradeDetailModal) closeTradeDetail();
   });
   elements.tradeDetailContent.addEventListener("click", (event) => {
+    const chartTab = event.target.closest("[data-review-chart-tab]");
+    if (chartTab) {
+      const workspace = chartTab.closest(".review-chart-workspace");
+      const activeKey = chartTab.dataset.reviewChartTab;
+      workspace.querySelectorAll("[data-review-chart-tab]").forEach((tab) => {
+        const active = tab.dataset.reviewChartTab === activeKey;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", String(active));
+      });
+      workspace.querySelectorAll("[data-review-chart-pane]").forEach((pane) => {
+        pane.hidden = pane.dataset.reviewChartPane !== activeKey;
+      });
+      return;
+    }
     const button = event.target.closest("[data-preview-image]");
     if (!button) return;
     openImagePreview(button.dataset.previewImage);

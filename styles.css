@@ -373,6 +373,53 @@ select:focus-visible,
   color: #70e7a7;
 }
 
+.winning-edge-stat strong {
+  font-size: clamp(1.1rem, 1.65vw, 1.55rem);
+  line-height: 1.12;
+}
+
+.winning-edge-stat small {
+  display: block;
+  margin-top: 6px;
+  color: #8fa4bd;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.winning-edge-stat {
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.winning-edge-stat:focus-visible {
+  outline: 3px solid rgba(36, 220, 120, 0.3);
+  outline-offset: 3px;
+}
+
+.winning-edge-stat.has-winning-edge::after {
+  content: "Click to highlight matching TP trades";
+  display: block;
+  margin-top: 5px;
+  color: #62dea0;
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.winning-edge-stat.is-highlighting {
+  border-color: rgba(36, 220, 120, 0.72);
+  box-shadow: 0 0 0 2px rgba(36, 220, 120, 0.1), 0 16px 36px rgba(0, 0, 0, 0.22);
+}
+
+.weekly-trades-table tbody tr.winning-edge-match {
+  background: linear-gradient(90deg, rgba(36, 220, 120, 0.15), rgba(36, 220, 120, 0.045));
+  box-shadow: inset 4px 0 0 var(--green), inset 0 1px 0 rgba(36, 220, 120, 0.18);
+}
+
+.weekly-trades-table tbody tr.winning-edge-match td {
+  border-bottom-color: rgba(36, 220, 120, 0.28);
+}
+
 .journal-panel {
   padding: 18px;
 }
@@ -2367,6 +2414,16 @@ select {
 .weekly-trades-table .action-btn {
   padding-inline: 7px;
   font-size: 0.72rem;
+}
+
+.weekly-trades-table tbody tr[data-trade-id] {
+  cursor: pointer;
+}
+
+.weekly-trades-table tbody tr[data-trade-id]:focus-visible {
+  outline: 2px solid rgba(36, 220, 120, 0.75);
+  outline-offset: -3px;
+  background: rgba(36, 220, 120, 0.055);
 }
 
 .detail-backdrop {
@@ -6210,5 +6267,169 @@ button.review-chart-media {
 @media (min-width: 1281px) and (min-height: 791px) {
   .trade-detail-modal .trade-view-main {
     grid-template-columns: minmax(240px, 0.58fr) minmax(0, 2.42fr);
+  }
+}
+
+/* Option 1 — single-screen analysis board with one tabbed chart workspace. */
+.trade-view-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.88fr) minmax(270px, 0.72fr);
+  gap: 9px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.trade-view-board > .review-analysis-panel,
+.review-chart-workspace {
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 15px;
+  background: rgba(7, 17, 31, 0.82);
+}
+
+.review-chart-workspace {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 9px;
+  padding: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 0 rgba(76, 132, 255, 0.78);
+}
+
+.review-chart-workspace-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.review-chart-workspace-heading h3 {
+  margin: 2px 0 0;
+  font-size: 0.95rem;
+}
+
+.review-chart-workspace-heading > span {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: #a9b9cc;
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.review-chart-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(65, 87, 118, 0.45);
+  border-radius: 11px;
+  background: rgba(14, 27, 46, 0.82);
+}
+
+.review-chart-tab {
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #91a5bd;
+  font-size: 0.74rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.review-chart-tab:hover {
+  color: #eaf4fb;
+  border-color: rgba(79, 110, 151, 0.65);
+}
+
+.review-chart-tab.active {
+  border-color: rgba(36, 220, 120, 0.58);
+  background: rgba(36, 220, 120, 0.13);
+  color: #72efa6;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.review-chart-panes,
+.review-chart-pane,
+.review-chart-pane > .review-chart-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+.review-chart-pane[hidden] {
+  display: none;
+}
+
+.review-chart-pane > .review-chart-panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.review-chart-pane .review-chart-heading .section-label,
+.review-chart-pane .review-chart-heading > span {
+  display: none;
+}
+
+.review-chart-pane .review-chart-heading h3 {
+  margin: 0;
+  color: #dfe8f3;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 1280px), (max-height: 790px) {
+  .trade-view-board {
+    grid-template-columns: 1fr;
+  }
+
+  .review-chart-workspace {
+    min-height: 430px;
+  }
+}
+
+/* Compact analysis stack: use card space efficiently and enlarge the chart. */
+@media (min-width: 1281px) and (min-height: 791px) {
+  .trade-view-board {
+    grid-template-columns: minmax(0, 1.06fr) minmax(480px, 0.94fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .trade-view-board > .review-analysis-panel--htf {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .trade-view-board > .review-analysis-panel--ltf {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .trade-view-board > .review-chart-workspace {
+    grid-column: 2;
+    grid-row: 1 / -1;
+  }
+
+  .trade-detail-modal .review-question-grid--htf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+  }
+
+  .trade-detail-modal .review-question-grid--ltf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+  }
+
+  .trade-detail-modal .review-question-card {
+    padding: 6px 8px;
+  }
+
+  .trade-detail-modal .review-answer-card {
+    min-height: 28px;
+    padding-block: 4px;
   }
 }
