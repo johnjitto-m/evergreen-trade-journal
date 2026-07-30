@@ -2223,22 +2223,25 @@ function replayDataRow(label, value, modifier = "") {
   </div>`;
 }
 
-function getMatchingOutcomeLink(analysis, tradeResult) {
-  const links = (analysis?.chartLinks || []).filter((item) => item?.url && item?.label);
-  const result = String(tradeResult || "").trim().toUpperCase();
-  if (!result) return null;
+function getLtfOutcomeSetupLink(analysis) {
+  const allLinks = Array.isArray(analysis?.chartLinks) ? analysis.chartLinks : [];
+  const savedLinks = allLinks.filter((item) => item?.url);
+  const labelText = (link) => String(link?.label || "").trim().toLowerCase();
 
-  const keywordMap = {
-    TP: ["tp", "target"],
-    SL: ["sl", "stop"],
-    BE: ["be", "break even", "breakeven"]
-  };
+  const combinedOutcomeLink = savedLinks.find((link) => {
+    const label = labelText(link);
+    return label.includes("be") && label.includes("sl") && label.includes("tp");
+  });
+  if (combinedOutcomeLink) return combinedOutcomeLink;
 
-  const keywords = keywordMap[result] || [];
-  return links.find((link) => {
-    const label = String(link.label || "").toLowerCase();
-    return keywords.some((keyword) => label.includes(keyword));
-  }) || null;
+  const legacyOutcomeLink = savedLinks.find((link) =>
+    /^(be|sl|tp|break even|stop|target)\b.*\bsetup\b/i.test(labelText(link))
+  );
+  if (legacyOutcomeLink) return legacyOutcomeLink;
+
+  // The outcome reference is the third default LTF chart for older records
+  // whose label was customised and no longer contains BE / SL / TP.
+  return allLinks[2]?.url ? allLinks[2] : null;
 }
 
 function getReviewChartPreview(analysis, options = {}) {
@@ -2367,7 +2370,7 @@ function reviewChartWorkspace(trade) {
       label: "LTF",
       title: "LTF Charts",
       analysis: trade.ltfAnalysis,
-      options: { preferredLink: getMatchingOutcomeLink(trade.ltfAnalysis, trade.result) },
+      options: { preferredLink: getLtfOutcomeSetupLink(trade.ltfAnalysis) },
       dataTitle: "LTF execution",
       dataSubtitle: "Entry, management and outcome",
       data: [

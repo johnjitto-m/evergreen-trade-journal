@@ -436,7 +436,7 @@ select:focus-visible,
 
 .table-wrap {
   overflow: auto;
-  max-height: 470px;
+  max-height: 540px;
   border-radius: 14px;
 }
 
