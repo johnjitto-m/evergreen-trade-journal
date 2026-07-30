@@ -1,7 +1,7 @@
 ## v32 — LTF trade comments
 
 - Added LTF Question 5: **Comments about the trade**.
-- Multi-select dropdown includes **Good Trade** and **Went TP Without Triggering the Adjusted RR**.
+- Multi-select dropdown includes **Good Trade** and **Took ERL Without Triggering the Adjusted RR**.
 - Custom trade-comment options can be added and synced to Evergreen Supabase.
 - Trade comments are preserved in Edit, View Trade, research search/filtering, JSON backup, and CSV export.
 - No Supabase schema change is required because comments are stored inside the existing `ltf_analysis` JSON field.
