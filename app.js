@@ -1765,7 +1765,6 @@ const INSIGHT_LABELS = {
 
 const WEEKLY_WINNING_EDGE_KEYS = [
   "dayBias",
-  "entryAttempt",
   "dayBiasPros",
   "dayBiasCons",
   "hasSmt",
