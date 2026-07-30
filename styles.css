@@ -17,6 +17,108 @@
   --radius: 20px;
 }
 
+/* Professional interaction polish: subtle motion without layout shifts. */
+@media (hover: hover) and (pointer: fine) {
+  .stat-card,
+  .research-stat,
+  .similarity-card,
+  .edge-card,
+  .mobile-trade-card {
+    transition:
+      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 220ms ease,
+      box-shadow 220ms ease,
+      background-color 220ms ease;
+  }
+
+  .stat-card:hover,
+  .research-stat:hover,
+  .similarity-card:hover,
+  .edge-card:hover,
+  .mobile-trade-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(36, 220, 120, 0.34);
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(36, 220, 120, 0.05);
+  }
+
+  .weekly-trades-table tbody tr,
+  .research-table tbody tr {
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .weekly-trades-table tbody tr:hover,
+  .research-table tbody tr:hover {
+    background: rgba(36, 220, 120, 0.045);
+    box-shadow: inset 3px 0 0 rgba(36, 220, 120, 0.65);
+  }
+
+  .weekly-trades-table tbody tr:hover .pill,
+  .research-table tbody tr:hover .pill {
+    transform: translateY(-1px) scale(1.025);
+    filter: brightness(1.08);
+  }
+
+  .pill {
+    transition: transform 180ms ease, filter 180ms ease, border-color 180ms ease;
+  }
+
+  .btn:hover,
+  .icon-btn:hover,
+  .action-btn:hover,
+  .step-tab:not(:disabled):hover {
+    transform: translateY(-2px);
+    filter: brightness(1.07);
+    box-shadow: 0 9px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn:active,
+  .icon-btn:active,
+  .action-btn:active,
+  .step-tab:not(:disabled):active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 80ms;
+  }
+
+  .choice-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(36, 220, 120, 0.55);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  input:hover,
+  select:hover,
+  textarea:hover,
+  details.multi-select-dropdown > summary:hover {
+    border-color: rgba(90, 119, 160, 0.82);
+  }
+
+  .journal-panel,
+  .database-panel,
+  .edge-panel,
+  .sync-panel {
+    transition: border-color 240ms ease, box-shadow 240ms ease;
+  }
+
+  .journal-panel:hover,
+  .database-panel:hover,
+  .edge-panel:hover,
+  .sync-panel:hover {
+    border-color: rgba(73, 111, 157, 0.55);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.025), 0 18px 50px rgba(0, 0, 0, 0.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -347,6 +449,26 @@ td {
   color: #89f0b6;
   border-color: rgba(36, 220, 120, 0.38);
   background: rgba(36, 220, 120, 0.1);
+}
+
+.dashboard-entry-cell small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.pill-entry-took {
+  border-color: rgba(36, 220, 120, 0.45);
+  background: rgba(36, 220, 120, 0.12);
+  color: #72efa6;
+}
+
+.pill-entry-not-taken {
+  border-color: rgba(150, 168, 195, 0.42);
+  background: rgba(150, 168, 195, 0.1);
+  color: #b8c5d8;
 }
 
 .pill-short,
@@ -2211,18 +2333,40 @@ select {
    ================================================================ */
 .weekly-trades-table {
   width: 100%;
+  min-width: 1760px;
   table-layout: fixed;
+}
+
+.weekly-trades-table th,
+.weekly-trades-table td {
+  width: 9.7%;
+  padding-right: 10px;
+  padding-left: 10px;
+  text-align: center;
+}
+
+.weekly-trades-table th:first-child,
+.weekly-trades-table td:first-child {
+  width: 3%;
+  padding-right: 4px;
+  padding-left: 4px;
 }
 
 .weekly-trades-table th:last-child,
 .weekly-trades-table td:last-child {
-  padding-right: 6px;
+  padding-right: 10px;
 }
 
 .weekly-trades-table .actions-cell {
-  width: max-content;
+  width: 100%;
   max-width: 100%;
-  justify-content: flex-start;
+  justify-content: center;
+  gap: 6px;
+}
+
+.weekly-trades-table .action-btn {
+  padding-inline: 7px;
+  font-size: 0.72rem;
 }
 
 .detail-backdrop {
@@ -5846,5 +5990,32 @@ button.review-chart-media {
   #tradeModal #ltfQuestions > .analysis-question-card:nth-child(7) {
     grid-column: 1 / -1 !important;
     grid-row: 4 !important;
+  }
+}
+
+/* Final interaction overrides must follow the component-specific rules above. */
+@media (hover: hover) and (pointer: fine) {
+  .action-btn {
+    transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  }
+
+  .btn:hover,
+  .icon-btn:hover,
+  .action-btn:hover,
+  .step-tab:not(:disabled):hover {
+    transform: translateY(-2px);
+    filter: brightness(1.07);
+    box-shadow: 0 9px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .choice-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(36, 220, 120, 0.55);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  .research-table tbody tr:hover {
+    background: rgba(36, 220, 120, 0.045);
+    box-shadow: inset 3px 0 0 rgba(36, 220, 120, 0.65);
   }
 }

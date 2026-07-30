@@ -31,7 +31,7 @@ const DEFAULT_OPTIONS = {
     "Coming After Creating a Counter FVG",
     "Trigger Candle Is the Counter FVG Created Candle"
   ],
-  htfPoiBackedBy: ["SC OB", "FVG", "Breaker Block", "Liq Sweep", "Previous Day High / Low Sweep"],
+  htfPoiBackedBy: ["SC OB", "FVG", "IFVG", "Breaker Block", "Liq Sweep", "Previous Day High / Low Sweep"],
   tradeComments: [
     "Good Trade",
     "Went TP Without Triggering the Adjusted RR"
@@ -2468,7 +2468,7 @@ function renderTrades() {
 
   if (!weeklyTrades.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="10" class="muted">No Evergreen trades this week. Click “Add Trade” to begin.</td>';
+    row.innerHTML = '<td colspan="11" class="muted">No Evergreen trades this week. Click “Add Trade” to begin.</td>';
     elements.rows.appendChild(row);
     updateStats(weeklyTrades);
     populateFilterOptions();
@@ -2484,17 +2484,24 @@ function renderTrades() {
       year: "numeric"
     }).format(date).replaceAll("/", "-");
     const dayText = trade.day || new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
+    const hasSmt = getTradeField(trade, "hasSmt") === "Yes";
+    const smtStrength = hasSmt
+      ? String(getTradeField(trade, "smtStrength") || "").replace(/\s*SMT$/i, "")
+      : "";
 
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
       <td class="date-cell">${dateText}<small>${escapeHtml(dayText)}</small></td>
       <td>${escapeHtml(trade.pair)}</td>
+      <td>${escapeHtml(getTradeField(trade, "dayBias") || "—")}</td>
       <td><span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction)}</span></td>
       <td><span class="pill ${poiZoneClass(getTradeField(trade, "poiZone"))}">${escapeHtml(getTradeField(trade, "poiZone") || "—")}</span></td>
-      <td><span class="pill pill-entry">${escapeHtml(String(trade.entryAttempt || "").replace(" Entry", ""))}</span></td>
-      <td>${escapeHtml(trade.fvgStatus)}</td>
-      <td>${escapeHtml(trade.fvgFormed)}</td>
+      <td>${escapeHtml(smtStrength)}</td>
+      <td>${escapeHtml(trade.entryAttempt || "—")}</td>
+      <td class="dashboard-entry-cell">
+        <span class="pill ${trade.status === "Took Trade" ? "pill-entry-took" : "pill-entry-not-taken"}">${escapeHtml(trade.status === "Took Trade" ? "Took" : "Not Taken")}</span>
+      </td>
       <td><span class="pill ${resultClass(trade.result)}">${escapeHtml(trade.result || "—")}</span></td>
       <td>
         <div class="actions-cell">
