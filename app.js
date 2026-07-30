@@ -1740,6 +1740,7 @@ const RESEARCH_FILTER_KEYS = [
 const INSIGHT_LABELS = {
   pair: "Pair",
   direction: "Direction",
+  entryAttempt: "Entry attempt",
   session: "Session",
   fvgStatus: "FVG status",
   fvgFormed: "FVG formed",
@@ -1762,8 +1763,28 @@ const INSIGHT_LABELS = {
   tradeComments: "Trade comments"
 };
 
+const WEEKLY_WINNING_EDGE_KEYS = [
+  "dayBias",
+  "entryAttempt",
+  "dayBiasPros",
+  "dayBiasCons",
+  "hasSmt",
+  "smtStrength",
+  "cleanHtfCisd",
+  "htfCisdLocation",
+  "fvgFormed",
+  "thirdCandle",
+  "fvgInteraction",
+  "poiZone",
+  "htfPoiBackedBy",
+  "poiMitigation",
+  "entryLevel",
+  "entryTrigger",
+];
+
 function getTradeField(trade, key) {
   const nested = {
+    entryAttempt: trade.entryAttempt,
     fvgFormed: trade.htfAnalysis?.fvgFormed || trade.fvgFormed,
     dayBias: trade.htfAnalysis?.dayBias,
     dayBiasPros: trade.htfAnalysis?.dayBiasPros || trade.htfAnalysis?.dayBiasSetup,
@@ -2578,12 +2599,8 @@ function updateStats(weeklyTrades = trades.filter((trade) => isDateInCurrentWeek
   const wins = completed.filter((trade) => trade.result === "TP").length;
   const pnl = completed.reduce((total, trade) => total + Number(trade.pnl || 0), 0);
   const winningTrades = completed.filter((trade) => trade.result === "TP");
-  const winningEdgeKeys = [
-    "smtStrength", "fvgInteraction", "poiZone", "htfPoiBackedBy", "poiMitigation",
-    "entryLevel", "beLogic", "entryTrigger", "dayBias", "dayBiasPros"
-  ];
   const winningEdge = winningTrades.length >= 2
-    ? winningEdgeKeys
+    ? WEEKLY_WINNING_EDGE_KEYS
       .map((key, priority) => ({ ...mostCommonInsight(winningTrades, key), priority }))
       .filter((insight) => insight.value && insight.count >= 2)
       .sort((a, b) => b.percentage - a.percentage || b.count - a.count || a.priority - b.priority)[0]
