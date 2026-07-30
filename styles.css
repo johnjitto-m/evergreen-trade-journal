@@ -2386,11 +2386,37 @@ select {
 
 .weekly-trades-table th,
 .weekly-trades-table td {
-  width: 9.7%;
+  width: 8.8%;
   padding-right: 10px;
   padding-left: 10px;
   text-align: center;
 }
+
+.setup-grade-pill {
+  display: inline-grid;
+  min-width: 38px;
+  min-height: 28px;
+  place-items: center;
+  padding: 4px 9px;
+  border: 1px solid #52647e;
+  border-radius: 999px;
+  background: rgba(25, 39, 61, 0.9);
+  color: #dce6f2;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.setup-grade-a-plus { border-color: #24dc78; background: rgba(7, 65, 43, 0.92); color: #82f4b8; }
+.setup-grade-a { border-color: #57d69a; background: rgba(10, 53, 42, 0.9); color: #8eeabb; }
+.setup-grade-b { border-color: #4c84ff; background: rgba(25, 47, 92, 0.9); color: #aac4ff; }
+.setup-grade-c { border-color: #d9a629; background: rgba(70, 53, 15, 0.88); color: #ffd778; }
+.setup-grade-d { border-color: #e25a67; background: rgba(72, 24, 35, 0.88); color: #ffabb2; }
+
+.trade-review-metric.setup-grade-a-plus strong,
+.trade-review-metric.setup-grade-a strong { color: #72edae; }
+.trade-review-metric.setup-grade-b strong { color: #a9c3ff; }
+.trade-review-metric.setup-grade-c strong { color: #ffd778; }
+.trade-review-metric.setup-grade-d strong { color: #ffabb2; }
 
 .weekly-trades-table th:first-child,
 .weekly-trades-table td:first-child {
@@ -6409,7 +6435,7 @@ button.review-chart-media {
 
 .trade-view-primary-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 

@@ -21,11 +21,14 @@ const DEFAULT_OPTIONS = {
   dayBiasFactor: [
     "Sweep CHOCH",
     "OB Mitigation",
+    "Last Two Candles",
+    "IFVG",
     "FVG Mitigation",
     "Counter FVG Mitigation",
     "Doji"
   ],
   poiMitigation: [
+    "None",
     "Aggressive Retracement",
     "Next Candle Trigger",
     "Coming After Creating a Counter FVG",
@@ -1808,6 +1811,52 @@ function getTradeField(trade, key) {
   return Object.prototype.hasOwnProperty.call(nested, key) ? nested[key] : trade[key];
 }
 
+function getTradeSetupRank(trade) {
+  const dayBias = getTradeField(trade, "dayBias");
+  const direction = trade.direction;
+  const dayBiasPros = getComparableValues(getTradeField(trade, "dayBiasPros"));
+  const poiBacking = getComparableValues(getTradeField(trade, "htfPoiBackedBy"));
+  const poiMitigation = getComparableValues(getTradeField(trade, "poiMitigation"));
+  const hasPro = (expected) => dayBiasPros.some((value) => value.toLowerCase() === expected.toLowerCase());
+  const hasMitigation = (expected) => poiMitigation.some((value) => value.toLowerCase() === expected.toLowerCase());
+
+  const biasAligned = (direction === "Long" && dayBias === "Buy")
+    || (direction === "Short" && dayBias === "Sell");
+  const hasSupportingPro = ["OB Mitigation", "Last Two Candles", "IFVG"].some(hasPro);
+  const hasSmt = getTradeField(trade, "hasSmt") === "Yes";
+  const hasCleanCisd = getTradeField(trade, "cleanHtfCisd") === "Yes";
+  const isBreakerBlock = getTradeField(trade, "entryLevel") === "BREAKER BLOCK";
+  const isPrimeSession = ["London", "New York"].includes(trade.session);
+  const poiZone = getTradeField(trade, "poiZone");
+  const locationAligned = (dayBias === "Buy" && poiZone === "Discount")
+    || (dayBias === "Sell" && poiZone === "Premium");
+  const checks = [
+    biasAligned,
+    isPrimeSession,
+    locationAligned,
+    hasPro("Sweep CHOCH"),
+    hasSupportingPro,
+    hasSmt,
+    getTradeField(trade, "thirdCandle") === "Positive",
+    hasCleanCisd,
+    poiBacking.length > 0,
+    poiMitigation.length === 1 && hasMitigation("None"),
+    isBreakerBlock
+  ];
+  const score = checks.filter(Boolean).length;
+  let grade = score === checks.length ? "A+" : score >= 10 ? "A" : score >= 8 ? "B" : score >= 5 ? "C" : "D";
+  const gradeOrder = ["D", "C", "B", "A", "A+"];
+  const capGrade = (maximum) => {
+    if (gradeOrder.indexOf(grade) > gradeOrder.indexOf(maximum)) grade = maximum;
+  };
+
+  if (!biasAligned) capGrade("C");
+  if (!hasSmt || !hasCleanCisd) capGrade("B");
+  if (!isBreakerBlock) capGrade("A");
+
+  return { grade, score, total: checks.length };
+}
+
 function getComparableValues(value) {
   if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
   if (value === undefined || value === null || value === "") return [];
@@ -2435,6 +2484,7 @@ function openTradeDetail(trade) {
   const pnlText = pnlNumber === null ? "Not recorded" : formatCurrency(pnlNumber);
   const pnlTone = pnlNumber === null ? "" : pnlNumber > 0 ? "is-positive" : pnlNumber < 0 ? "is-negative" : "";
   const outcomeTone = trade.result === "TP" ? "answer-positive" : trade.result === "SL" ? "answer-negative" : trade.result === "BE" ? "answer-neutral" : "";
+  const setupRank = getTradeSetupRank(trade);
 
   elements.tradeDetailTitle.textContent = `${trade.pair || "Trade"} · ${dateText}`;
   elements.tradeDetailContent.innerHTML = `
@@ -2455,6 +2505,7 @@ function openTradeDetail(trade) {
             ${reviewMetric("RR", rrNumber === null ? "—" : `${rrNumber.toFixed(2)}R`)}
             ${reviewMetric("Risk", riskNumber === null ? "—" : formatCurrency(riskNumber))}
             ${reviewMetric("Result", trade.result || "Pending", outcomeTone)}
+            ${reviewMetric("Setup Grade", `${setupRank.grade} Setup`, `setup-grade-${setupRank.grade.replace("+", "-plus").toLowerCase()}`)}
           </div>
         </div>
       </section>
@@ -2539,7 +2590,7 @@ function renderTrades() {
 
   if (!weeklyTrades.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="11" class="muted">No Evergreen trades this week. Click “Add Trade” to begin.</td>';
+    row.innerHTML = '<td colspan="12" class="muted">No Evergreen trades this week. Click “Add Trade” to begin.</td>';
     elements.rows.appendChild(row);
     updateStats(weeklyTrades);
     populateFilterOptions();
@@ -2559,6 +2610,7 @@ function renderTrades() {
     const smtDisplay = hasSmtAnswer === "Yes"
       ? String(getTradeField(trade, "smtStrength") || "Yes").replace(/\s*SMT$/i, "")
       : hasSmtAnswer || "—";
+    const setupRank = getTradeSetupRank(trade);
 
     const row = document.createElement("tr");
     row.dataset.tradeId = trade.id;
@@ -2572,6 +2624,7 @@ function renderTrades() {
       <td><span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction)}</span></td>
       <td><span class="pill ${poiZoneClass(getTradeField(trade, "poiZone"))}">${escapeHtml(getTradeField(trade, "poiZone") || "—")}</span></td>
       <td>${escapeHtml(smtDisplay)}</td>
+      <td><span class="setup-grade-pill setup-grade-${setupRank.grade.replace("+", "-plus").toLowerCase()}" title="${setupRank.score} of ${setupRank.total} setup checks">${escapeHtml(setupRank.grade)}</span></td>
       <td>${escapeHtml(trade.entryAttempt || "—")}</td>
       <td class="dashboard-entry-cell">
         <span class="pill ${trade.status === "Took Trade" ? "pill-entry-took" : "pill-entry-not-taken"}">${escapeHtml(trade.status === "Took Trade" ? "Took" : "Not Taken")}</span>
@@ -2760,13 +2813,14 @@ function exportJson() {
 
 function exportCsv() {
   const headers = [
-    "date", "pair", "direction", "status", "entryAttempt", "fvgStatus", "fvgFormed",
+    "date", "pair", "direction", "status", "setupGrade", "entryAttempt", "fvgStatus", "fvgFormed",
     "dayBias", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "smtPair", "thirdCandle",
     "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "slPips", "beLogic", "rrAdjusted", "entryTrigger", "tradeComments", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
       ...trade,
+      setupGrade: getTradeSetupRank(trade).grade,
       dayBias: trade.htfAnalysis?.dayBias,
       dayBiasPros: getComparableValues(trade.htfAnalysis?.dayBiasPros || trade.htfAnalysis?.dayBiasSetup).join(" | "),
       dayBiasCons: getComparableValues(trade.htfAnalysis?.dayBiasCons).join(" | "),
