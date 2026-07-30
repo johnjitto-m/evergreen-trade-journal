@@ -1755,7 +1755,7 @@ const INSIGHT_LABELS = {
   htfPoiBackedBy: "HTF POI backing",
   entryLevel: "Entry level",
   beLogic: "BE logic",
-  rrAdjusted: "RR adjusted for RR",
+  rrAdjusted: "Entry adjusted for RR",
   entryTrigger: "Entry trigger",
   tradeComments: "Trade comments"
 };
@@ -2003,7 +2003,7 @@ function renderEdgeCards(filtered) {
     ["BEST HTF POI BACKING", "htfPoiBackedBy", false],
     ["BEST ENTRY LEVEL", "entryLevel", false],
     ["BEST BE LOGIC", "beLogic", false],
-    ["BEST RR ADJUSTMENT", "rrAdjusted", false],
+    ["BEST ENTRY RR ADJUSTMENT", "rrAdjusted", false],
     ["BEST ENTRY TRIGGER", "entryTrigger", false],
     ["WORST MITIGATION", "poiMitigation", true]
   ];
@@ -2177,8 +2177,7 @@ function reviewAnswerCards(value, modifier = "") {
 
 function reviewQuestionCard(number, question, value, extraClass = "", modifier = "") {
   return `<fieldset class="review-question-card ${escapeAttribute(extraClass)}">
-    <legend class="section-label">QUESTION ${escapeHtml(number)}</legend>
-    <p class="review-question-title">${escapeHtml(question)}</p>
+    <legend class="section-label">${escapeHtml(question)}</legend>
     <div class="review-answer-grid">${reviewAnswerCards(value, modifier)}</div>
   </fieldset>`;
 }
@@ -2304,31 +2303,28 @@ function openTradeDetail(trade) {
   const cleanCisdAnswer = getTradeField(trade, "cleanHtfCisd") === "Yes"
     ? ["Yes", getTradeField(trade, "htfCisdLocation")]
     : getTradeField(trade, "cleanHtfCisd");
-  const outcomeAnswer = [
-    trade.result || "Pending",
-    riskNumber === null ? "Risk not recorded" : `Risk ${formatCurrency(riskNumber)}`,
-    rrNumber === null ? "RR not recorded" : `${rrNumber.toFixed(2)}R`,
-    pnlText
-  ];
-
   elements.tradeDetailTitle.textContent = `${trade.pair || "Trade"} · ${dateText}`;
   elements.tradeDetailContent.innerHTML = `
     <div class="trade-view-shell">
-      <section class="trade-view-basic-panel">
-        <div class="trade-view-section-heading">
-          <div>
-            <p class="section-label">BASIC DETAILS</p>
-            <h3>${escapeHtml(trade.pair || "Trade")} · ${escapeHtml(dateText)} · ${escapeHtml(dayText)}</h3>
+      <section class="trade-view-basic-panel trade-view-overview">
+        <div class="trade-view-overview-primary">
+          <div class="trade-view-identity">
+            <p class="section-label">BASIC TRADE INFORMATION</p>
+            <h3>${escapeHtml(trade.pair || "Trade")}</h3>
+            <p>${escapeHtml(dateText)} <span>·</span> ${escapeHtml(dayText)}</p>
+            <div class="trade-view-title-pills">
+              <span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction || "—")}</span>
+              <span class="pill pill-status">${escapeHtml(trade.status || "—")}</span>
+            </div>
           </div>
-          <div class="trade-view-title-pills">
-            <span class="pill ${trade.direction === "Long" ? "pill-long" : "pill-short"}">${escapeHtml(trade.direction || "—")}</span>
-            <span class="pill pill-status">${escapeHtml(trade.status || "—")}</span>
-            <span class="pill ${trade.result ? resultClass(trade.result) : "pill-neutral"}">${escapeHtml(trade.result || "Pending")}</span>
+          <div class="trade-view-primary-metrics">
+            ${reviewMetric("P/L", pnlText, pnlTone)}
+            ${reviewMetric("RR", rrNumber === null ? "—" : `${rrNumber.toFixed(2)}R`)}
+            ${reviewMetric("Risk", riskNumber === null ? "—" : formatCurrency(riskNumber))}
+            ${reviewMetric("Result", trade.result || "Pending", outcomeTone)}
           </div>
         </div>
-        <div class="trade-view-basic-grid">
-          ${reviewBasicField("Date", `${dateText} · ${dayText}`)}
-          ${reviewBasicField("Pair", trade.pair)}
+        <div class="trade-view-basic-grid trade-view-basic-grid--secondary">
           ${reviewBasicField("Session", trade.session)}
           ${reviewBasicField("HTF / LTF", `${trade.htf || "—"} / ${trade.ltf || "—"}`)}
           ${reviewBasicField("Entry Attempt", trade.entryAttempt)}
@@ -2336,8 +2332,6 @@ function openTradeDetail(trade) {
           ${reviewBasicField("Day Bias", getTradeField(trade, "dayBias"))}
           ${reviewBasicField("Day Bias Pros", getTradeField(trade, "dayBiasPros"))}
           ${reviewBasicField("Day Bias Cons", getTradeField(trade, "dayBiasCons"))}
-          ${reviewBasicField("Risk / RR", `${riskNumber === null ? "—" : formatCurrency(riskNumber)} / ${rrNumber === null ? "—" : `${rrNumber.toFixed(2)}R`}`)}
-          ${reviewBasicField("P/L", pnlText, pnlTone)}
         </div>
       </section>
 
@@ -2355,18 +2349,17 @@ function openTradeDetail(trade) {
             <div class="trade-view-section-heading compact-heading">
               <div>
                 <p class="section-label">HTF ANALYSIS</p>
-                <h3>FVG POI Checklist</h3>
               </div>
             </div>
             <div class="review-question-grid review-question-grid--htf">
-              ${reviewQuestionCard("1", "Does it have SMT?", smtAnswer)}
-              ${reviewQuestionCard("2", "Does this POI have a clean HTF CISD?", cleanCisdAnswer)}
-              ${reviewQuestionCard("3", "FVG formation day", getTradeField(trade, "fvgFormed"))}
-              ${reviewQuestionCard("4", "FVG created third candle is?", getTradeField(trade, "thirdCandle"))}
-              ${reviewQuestionCard("5", "FVG mitigation or sweep?", getTradeField(trade, "fvgInteraction"))}
-              ${reviewQuestionCard("6", "Is this POI in premium or discount?", getTradeField(trade, "poiZone"))}
-              ${reviewQuestionCard("7", "HTF POI backed by?", getTradeField(trade, "htfPoiBackedBy"))}
-              ${reviewQuestionCard("8", "POI mitigation behaviour", getTradeField(trade, "poiMitigation"))}
+              ${reviewQuestionCard("1", "SMT", smtAnswer)}
+              ${reviewQuestionCard("2", "HTF CLEAN CISD", cleanCisdAnswer)}
+              ${reviewQuestionCard("3", "FVG FORMED", getTradeField(trade, "fvgFormed"))}
+              ${reviewQuestionCard("4", "FVG'S THIRD CANDLE", getTradeField(trade, "thirdCandle"))}
+              ${reviewQuestionCard("5", "FVG MITIGATION / SWEEP", getTradeField(trade, "fvgInteraction"))}
+              ${reviewQuestionCard("6", "PREMIUM / DISCOUNT", getTradeField(trade, "poiZone"))}
+              ${reviewQuestionCard("7", "POI BACKED BY", getTradeField(trade, "htfPoiBackedBy"))}
+              ${reviewQuestionCard("8", "POI MITIGATION BEHAVIOR", getTradeField(trade, "poiMitigation"))}
             </div>
           </section>
 
@@ -2374,17 +2367,15 @@ function openTradeDetail(trade) {
             <div class="trade-view-section-heading compact-heading">
               <div>
                 <p class="section-label">LTF ANALYSIS</p>
-                <h3>Execution Checklist</h3>
               </div>
             </div>
             <div class="review-question-grid review-question-grid--ltf">
-              ${reviewQuestionCard("1", "Which entry level was used?", getTradeField(trade, "entryLevel"))}
-              ${reviewQuestionCard("2", "How much is the SL pips?", trade.slPips ?? trade.ltfAnalysis?.slPips)}
-              ${reviewQuestionCard("3", "What was the BE logic?", getTradeField(trade, "beLogic"))}
-              ${reviewQuestionCard("4", "RR adjusted for RR", getTradeField(trade, "rrAdjusted"))}
-              ${reviewQuestionCard("5", "Trade outcome", outcomeAnswer, "", outcomeTone)}
-              ${reviewQuestionCard("6", "What was the entry trigger?", getTradeField(trade, "entryTrigger"))}
-              ${reviewQuestionCard("7", "Comments about the trade", getTradeField(trade, "tradeComments"))}
+              ${reviewQuestionCard("1", "ENTRY OPTION", getTradeField(trade, "entryLevel"))}
+              ${reviewQuestionCard("2", "STOP-LOSS PIPS", trade.slPips ?? trade.ltfAnalysis?.slPips)}
+              ${reviewQuestionCard("3", "BREAK EVEN LEVEL", getTradeField(trade, "beLogic"))}
+              ${reviewQuestionCard("4", "Entry ADJUSTED FOR RR", getTradeField(trade, "rrAdjusted"))}
+              ${reviewQuestionCard("5", "ENTERY TRIGGER BY ANYTHING", getTradeField(trade, "entryTrigger"))}
+              ${reviewQuestionCard("6", "ABOUT THE TRADE", getTradeField(trade, "tradeComments"))}
             </div>
           </section>
         </div>

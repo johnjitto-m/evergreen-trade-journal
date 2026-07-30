@@ -10,7 +10,7 @@
     <title>Evergreen Trade Journal</title>
     <link href="manifest.webmanifest" rel="manifest" />
     <link href="icons/icon-192.png" rel="icon" />
-    <link href="styles.css?v=67" rel="stylesheet" />
+    <link href="styles.css?v=75" rel="stylesheet" />
 </head>
 
 <body>
@@ -323,9 +323,9 @@
                         </select>
                     </label>
                     <label class="filter-field">
-                        <span>RR Adjusted</span>
+                        <span>Entry Adjusted for RR</span>
                         <select data-filter-key="rrAdjusted" id="filterRrAdjusted">
-                            <option value="">Any RR Adjustment</option>
+                            <option value="">Any Entry RR Adjustment</option>
                         </select>
                     </label>
                     <label class="filter-field">
@@ -808,11 +808,7 @@
                             </fieldset>
                             <fieldset class="analysis-question-card">
                                 <legend class="section-label">BREAK EVEN LEVEL</legend>
-                                <div class="choice-grid choice-grid-3 compact-choices">
-                                    <label class="choice-card">
-                                        <input name="beLogic" type="radio" value="BE Level" />
-                                        <strong>BE Level</strong>
-                                    </label>
+                                <div class="choice-grid choice-grid-2 compact-choices">
                                     <label class="choice-card">
                                         <input name="beLogic" type="radio" value="Counter FVG Mitigation" />
                                         <strong>Counter FVG Mitigation</strong>
@@ -824,7 +820,7 @@
                                 </div>
                             </fieldset>
                             <fieldset class="analysis-question-card rr-adjusted-card">
-                                <legend class="section-label">RR ADJUSTED FOR RR</legend>
+                                <legend class="section-label">ENTRY ADJUSTED FOR RR</legend>
                                 <div class="choice-grid choice-grid-2 compact-choices">
                                     <label class="choice-card">
                                         <input name="rrAdjusted" type="radio" value="Yes (3.5RR)" />
@@ -981,9 +977,9 @@
     </div>
     <div aria-live="polite" class="toast" id="toast" role="status"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=67"></script>
+    <script src="supabase-config.js?v=75"></script>
     <script src="supabase-sync.js?v=51"></script>
-    <script src="app.js?v=67"></script>
+    <script src="app.js?v=75"></script>
 </body>
 
 </html>
