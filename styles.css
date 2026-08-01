@@ -1578,6 +1578,23 @@ select {
   color: #ffadb2;
 }
 
+.research-winning-edge {
+  grid-column: span 2;
+}
+
+.research-winning-edge strong {
+  display: block;
+  color: #70e7a7;
+  font-size: clamp(0.94rem, 1.5vw, 1.2rem);
+  line-height: 1.35;
+}
+
+.research-winning-edge small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
 .edge-panel,
 .database-panel {
   padding: 20px;

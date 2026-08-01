@@ -251,6 +251,8 @@ const elements = {
   filteredWinRate: document.querySelector("#filteredWinRate"),
   filteredTrades: document.querySelector("#filteredTrades"),
   filteredAvgRr: document.querySelector("#filteredAvgRr"),
+  filteredWinningEdge: document.querySelector("#filteredWinningEdge"),
+  filteredWinningEdgeNote: document.querySelector("#filteredWinningEdgeNote"),
   researchResultCount: document.querySelector("#researchResultCount"),
   winningTradeCount: document.querySelector("#winningTradeCount"),
   losingTradeCount: document.querySelector("#losingTradeCount"),
@@ -1816,23 +1818,15 @@ const INSIGHT_LABELS = {
   tradeComments: "Trade comments"
 };
 
-const WEEKLY_WINNING_EDGE_KEYS = [
-  "dayBias",
-  "dailyOpenPosition",
-  "dayBiasPros",
-  "dayBiasCons",
-  "hasSmt",
-  "smtStrength",
-  "cleanHtfCisd",
-  "htfCisdLocation",
-  "fvgFormed",
-  "thirdCandle",
-  "fvgInteraction",
-  "poiZone",
-  "htfPoiBackedBy",
-  "poiMitigation",
-  "entryLevel",
-  "entryTrigger",
+const WEEKLY_WINNING_EDGE_FEATURES = [
+  { key: "direction", label: "Direction" },
+  { key: "dayBias", label: "Day Bias" },
+  { key: "dailyOpenPosition", label: "Daily Open" },
+  { key: "smtStrength", label: "SMT" },
+  { key: "poiZone", label: "POI Zone" },
+  { key: "htfPoiBackedBy", label: "POI Backing" },
+  { key: "fvgInteraction", label: "FVG" },
+  { key: "entryLevel", label: "Entry" }
 ];
 
 function getTradeField(trade, key) {
@@ -2025,12 +2019,27 @@ function updateResearchStats(filtered) {
   const avgRr = rrTrades.length
     ? rrTrades.reduce((total, trade) => total + Number(trade.rr), 0) / rrTrades.length
     : 0;
+  const winningTrades = completed.filter((trade) => trade.result === "TP");
+  const winningEdge = winningTrades.length >= 2
+    ? getWeeklyWinningEdgeCombination(completed, winningTrades)
+    : null;
 
   elements.filteredPnl.textContent = formatCurrency(pnl);
   elements.filteredPnl.classList.toggle("negative", pnl < 0);
   elements.filteredWinRate.textContent = completed.length ? `${((wins / completed.length) * 100).toFixed(1)}%` : "0.0%";
   elements.filteredTrades.textContent = String(filtered.length);
   elements.filteredAvgRr.textContent = `${avgRr.toFixed(2)}R`;
+  if (winningEdge) {
+    elements.filteredWinningEdge.textContent = winningEdge.conditions
+      .map(({ label, value }) => `${label}: ${value}`)
+      .join(" + ");
+    elements.filteredWinningEdgeNote.textContent = `${winningEdge.winnerCount} TP / ${winningEdge.totalCount} completed · ${winningEdge.winRate}% win rate`;
+  } else {
+    elements.filteredWinningEdge.textContent = winningTrades.length < 2 ? "Need 2 TP trades" : "No shared pattern";
+    elements.filteredWinningEdgeNote.textContent = winningTrades.length < 2
+      ? "Filter trades to reveal a shared winning setup."
+      : "Record more matching setup details to reveal an edge.";
+  }
 }
 
 function mostCommonInsight(subset, key) {
@@ -2043,6 +2052,52 @@ function mostCommonInsight(subset, key) {
   const [value, count] = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] || [];
   if (!value || !subset.length) return null;
   return { key, value, count, percentage: Math.round((count / subset.length) * 100) };
+}
+
+function getWeeklyWinningEdgeCombination(completedTrades, winningTrades) {
+  const candidates = new Map();
+  const matchesConditions = (trade, conditions) => conditions.every(({ key, value }) =>
+    getComparableValues(getTradeField(trade, key)).includes(value)
+  );
+  const addCombinations = (items, size, start = 0, current = []) => {
+    if (current.length === size) {
+      const conditions = current.map(({ feature, value }) => ({ ...feature, value }));
+      const signature = conditions.map(({ key, value }) => `${key}:${value}`).join("|");
+      candidates.set(signature, conditions);
+      return;
+    }
+    for (let index = start; index < items.length; index += 1) {
+      if (current.some((item) => item.feature.key === items[index].feature.key)) continue;
+      addCombinations(items, size, index + 1, [...current, items[index]]);
+    }
+  };
+
+  winningTrades.forEach((trade) => {
+    const values = WEEKLY_WINNING_EDGE_FEATURES.flatMap((feature) =>
+      getComparableValues(getTradeField(trade, feature.key)).map((value) => ({ feature, value }))
+    );
+    // Prefer a clear three-part setup; two-part combinations remain as a fallback.
+    if (values.length >= 3) addCombinations(values, 3);
+    if (values.length >= 2) addCombinations(values, 2);
+  });
+
+  return [...candidates.values()]
+    .map((conditions) => {
+      const matchingWinners = winningTrades.filter((trade) => matchesConditions(trade, conditions));
+      const matchingCompleted = completedTrades.filter((trade) => matchesConditions(trade, conditions));
+      return {
+        conditions,
+        winnerIds: matchingWinners.map((trade) => trade.id),
+        winnerCount: matchingWinners.length,
+        totalCount: matchingCompleted.length,
+        winRate: matchingCompleted.length
+          ? Math.round((matchingWinners.length / matchingCompleted.length) * 100)
+          : 0
+      };
+    })
+    .filter((candidate) => candidate.winnerCount >= 2)
+    .sort((a, b) => b.winnerCount - a.winnerCount || b.winRate - a.winRate
+      || b.conditions.length - a.conditions.length || b.totalCount - a.totalCount)[0] || null;
 }
 
 function renderSimilarityList(container, subset) {
@@ -2749,23 +2804,20 @@ function updateStats(weeklyTrades = trades.filter((trade) => isDateInCurrentWeek
   const pnl = completed.reduce((total, trade) => total + Number(trade.pnl || 0), 0);
   const winningTrades = completed.filter((trade) => trade.result === "TP");
   const winningEdge = winningTrades.length >= 2
-    ? WEEKLY_WINNING_EDGE_KEYS
-      .map((key, priority) => ({ ...mostCommonInsight(winningTrades, key), priority }))
-      .filter((insight) => insight.value && insight.count >= 2)
-      .sort((a, b) => b.percentage - a.percentage || b.count - a.count || a.priority - b.priority)[0]
+    ? getWeeklyWinningEdgeCombination(completed, winningTrades)
     : null;
 
   elements.weekPnl.textContent = formatCurrency(pnl);
   elements.weekWinRate.textContent = completed.length ? `${((wins / completed.length) * 100).toFixed(1)}%` : "0.0%";
   elements.weekTrades.textContent = String(counted.length);
   if (winningEdge) {
-    const matchingTradeIds = winningTrades
-      .filter((trade) => getComparableValues(getTradeField(trade, winningEdge.key)).includes(winningEdge.value))
-      .map((trade) => trade.id);
-    elements.weekWinningEdge.textContent = winningEdge.value;
-    elements.weekWinningEdgeNote.textContent = `${INSIGHT_LABELS[winningEdge.key]} · ${winningEdge.percentage}% of ${winningTrades.length} TP trades`;
-    elements.weekWinningEdgeCard.dataset.tradeIds = matchingTradeIds.join(",");
-    elements.weekWinningEdgeCard.dataset.edgeLabel = winningEdge.value;
+    const edgeLabel = winningEdge.conditions
+      .map(({ label, value }) => `${label}: ${value}`)
+      .join(" + ");
+    elements.weekWinningEdge.textContent = edgeLabel;
+    elements.weekWinningEdgeNote.textContent = `${winningEdge.winnerCount} TP / ${winningEdge.totalCount} completed · ${winningEdge.winRate}% win rate`;
+    elements.weekWinningEdgeCard.dataset.tradeIds = winningEdge.winnerIds.join(",");
+    elements.weekWinningEdgeCard.dataset.edgeLabel = edgeLabel;
     elements.weekWinningEdgeCard.classList.remove("is-highlighting");
     elements.weekWinningEdgeCard.classList.add("has-winning-edge");
     elements.weekWinningEdgeCard.setAttribute("aria-pressed", "false");
