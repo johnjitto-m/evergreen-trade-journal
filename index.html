@@ -248,6 +248,12 @@
                         </select>
                     </label>
                     <label class="filter-field">
+                        <span>Daily Open Position</span>
+                        <select data-filter-key="dailyOpenPosition" id="filterDailyOpenPosition">
+                            <option value="">Any Daily Open Position</option>
+                        </select>
+                    </label>
+                    <label class="filter-field">
                         <span>Day Bias Pro</span>
                         <select data-filter-key="dayBiasPros" id="filterDayBiasPros">
                             <option value="">Any Day Bias Pro</option>
@@ -512,19 +518,6 @@
                                         </label>
                                     </div>
                                 </fieldset>
-                                <fieldset class="choice-section">
-                                    <legend class="section-label">FVG STATUS</legend>
-                                    <div class="choice-grid choice-grid-2" data-choice-group="fvgStatus">
-                                        <label class="choice-card selected">
-                                            <input checked="" name="fvgStatus" type="radio" value="Fresh FVG" />
-                                            <strong>Fresh FVG</strong>
-                                        </label>
-                                        <label class="choice-card">
-                                            <input name="fvgStatus" type="radio" value="Partial FVG" />
-                                            <strong>Partial FVG</strong>
-                                        </label>
-                                    </div>
-                                </fieldset>
                                 <fieldset class="choice-section basic-day-question">
                                     <legend class="section-label">DAY BIAS</legend>
                                     <div class="choice-grid choice-grid-3 day-bias-choice-grid"
@@ -543,6 +536,24 @@
                                         </label>
                                     </div>
                                 </fieldset>
+                                <fieldset class="choice-section basic-day-question">
+                                    <legend class="section-label">DAILY OPEN POSITION</legend>
+                                    <div class="choice-grid choice-grid-3 day-bias-choice-grid"
+                                        data-choice-group="dailyOpenPosition">
+                                        <label class="choice-card">
+                                            <input name="dailyOpenPosition" type="radio" value="Below Daily Open" />
+                                            <strong>Below Daily Open</strong>
+                                        </label>
+                                        <label class="choice-card">
+                                            <input name="dailyOpenPosition" type="radio" value="Above Daily Open" />
+                                            <strong>Above Daily Open</strong>
+                                        </label>
+                                        <label class="choice-card">
+                                            <input name="dailyOpenPosition" type="radio" value="At Daily Open" />
+                                            <strong>At Daily Open</strong>
+                                        </label>
+                                    </div>
+                                </fieldset>
                                 <fieldset class="choice-section basic-day-pro-con-question">
                                     <legend class="section-label">DAY BIAS CHECK</legend>
                                     <div class="day-bias-pro-con-grid">
@@ -553,10 +564,8 @@
                                                 <span aria-hidden="true" class="multi-select-chevron">⌄</span>
                                             </summary>
                                             <div class="multi-select-panel">
-                                                <p class="dropdown-panel-title">Pros supporting the Day bias</p>
+                                                <p class="dropdown-panel-title">DAY BIAS CHECK (PRO)</p>
                                                 <div class="multi-select-options" id="dayBiasProsOptions"></div>
-                                                <button class="btn btn-secondary add-option-button"
-                                                    id="addDayBiasProsOptionBtn" type="button">+ Add Option</button>
                                             </div>
                                         </details>
                                         <details class="multi-select-dropdown bias-factor-dropdown"
@@ -566,10 +575,8 @@
                                                 <span aria-hidden="true" class="multi-select-chevron">⌄</span>
                                             </summary>
                                             <div class="multi-select-panel">
-                                                <p class="dropdown-panel-title">Cons against the Day bias</p>
+                                                <p class="dropdown-panel-title">DAY BIAS CHECK (CONS)</p>
                                                 <div class="multi-select-options" id="dayBiasConsOptions"></div>
-                                                <button class="btn btn-secondary add-option-button"
-                                                    id="addDayBiasConsOptionBtn" type="button">+ Add Option</button>
                                             </div>
                                         </details>
                                     </div>
@@ -621,55 +628,33 @@
 
                             <fieldset class="analysis-question-card">
                                 <legend class="section-label">SMT</legend>
-                                <div class="choice-grid choice-grid-2 compact-choices">
-                                    <label class="choice-card">
-                                        <input name="hasSmt" type="radio" value="Yes" />
-                                        <strong>Yes</strong>
-                                    </label>
+                                <div class="choice-grid choice-grid-3 compact-choices">
                                     <label class="choice-card">
                                         <input name="hasSmt" type="radio" value="No" />
                                         <strong>No</strong>
                                     </label>
+                                    <label class="choice-card">
+                                        <input name="hasSmt" type="radio" value="Weak SMT" />
+                                        <strong>Weak (<span id="weakSmtPair">GBPUSD</span>)</strong>
+                                    </label>
+                                    <label class="choice-card">
+                                        <input name="hasSmt" type="radio" value="Strong SMT" />
+                                        <strong>Strong (<span id="strongSmtPair">GBPUSD</span>)</strong>
+                                    </label>
                                 </div>
-                                <div class="conditional-panel" hidden="" id="smtDetails">
-                                    <p class="conditional-title">SMT comparison: <strong id="smtPairText">EURUSD vs
-                                            GBPUSD</strong></p>
-                                    <div class="choice-grid choice-grid-2 compact-choices">
-                                        <label class="choice-card">
-                                            <input name="smtStrength" type="radio" value="Weak SMT" />
-                                            <strong>Weak SMT</strong>
-                                        </label>
-                                        <label class="choice-card">
-                                            <input name="smtStrength" type="radio" value="Strong SMT" />
-                                            <strong>Strong SMT</strong>
-                                        </label>
-                                    </div>
-                                </div>
+                                <span hidden="" id="smtPairText">EURUSD vs GBPUSD</span>
                             </fieldset>
                             <fieldset class="analysis-question-card">
-                                <legend class="section-label">HTF CISD </legend>
-                                <div class="choice-grid choice-grid-2 compact-choices">
-                                    <label class="choice-card">
-                                        <input name="cleanHtfCisd" type="radio" value="Yes" />
-                                        <strong>Yes</strong>
+                                <legend class="section-label">FVG STATUS</legend>
+                                <div class="choice-grid choice-grid-2 compact-choices" data-choice-group="fvgStatus">
+                                    <label class="choice-card selected">
+                                        <input checked="" name="fvgStatus" type="radio" value="Fresh FVG" />
+                                        <strong>Fresh FVG</strong>
                                     </label>
                                     <label class="choice-card">
-                                        <input name="cleanHtfCisd" type="radio" value="No" />
-                                        <strong>No</strong>
+                                        <input name="fvgStatus" type="radio" value="Partial FVG" />
+                                        <strong>Partial FVG</strong>
                                     </label>
-                                </div>
-                                <div class="conditional-panel" hidden="" id="cleanHtfCisdDetails">
-                                    <p class="conditional-title">Where is the clean HTF CISD</p>
-                                    <div class="choice-grid choice-grid-2 compact-choices">
-                                        <label class="choice-card">
-                                            <input name="htfCisdLocation" type="radio" value="CISD Inside FVG" />
-                                            <strong>CISD Inside FVG</strong>
-                                        </label>
-                                        <label class="choice-card">
-                                            <input name="htfCisdLocation" type="radio" value="CISD Outside FVG" />
-                                            <strong>CISD Outside FVG</strong>
-                                        </label>
-                                    </div>
                                 </div>
                             </fieldset>
                             <fieldset class="analysis-question-card">
