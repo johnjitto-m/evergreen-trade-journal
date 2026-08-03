@@ -48,8 +48,9 @@ const DEFAULT_OPTIONS = {
     "FVG",
     "BREAKER BLOCK",
     "LIQUIDITY SWEEP",
-    "CISD Inside FVG",
-    "CISD Outside FVG"
+    "ORDER PAIRING",
+    "CISD INSIDE FVG",
+    "CISD OUTSIDE FVG"
   ],
   tradeComments: [
     "Good Trade",
@@ -1058,6 +1059,7 @@ function captureLtfForm() {
     beLogic: formData.get("beLogic") || "",
     rrAdjusted: formData.get("rrAdjusted") || "",
     entryTrigger: formData.get("entryTrigger") || "",
+    currentCandleOpen: formData.get("currentCandleOpen") || "",
     result: formData.get("result") || "",
     riskAmount: formData.get("riskAmount") || "",
     riskReward: formData.get("riskReward") || "",
@@ -1788,7 +1790,7 @@ function updateChartPreview(type) {
 const RESEARCH_FILTER_KEYS = [
   "direction", "status", "pair", "result", "session", "htf", "entryAttempt", "fvgStatus",
   "fvgFormed", "dayBias", "dailyOpenPosition", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "thirdCandle", "fvgInteraction",
-  "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "rrAdjusted", "entryTrigger", "tradeComments"
+  "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "rrAdjusted", "entryTrigger", "currentCandleOpen", "tradeComments"
 ];
 
 const INSIGHT_LABELS = {
@@ -1815,6 +1817,7 @@ const INSIGHT_LABELS = {
   beLogic: "BE logic",
   rrAdjusted: "Entry adjusted for RR",
   entryTrigger: "Entry trigger",
+  currentCandleOpen: "Current candle open",
   tradeComments: "Trade comments"
 };
 
@@ -1851,6 +1854,7 @@ function getTradeField(trade, key) {
     beLogic: trade.ltfAnalysis?.beLogic,
     rrAdjusted: trade.ltfAnalysis?.rrAdjusted,
     entryTrigger: trade.ltfAnalysis?.entryTrigger,
+    currentCandleOpen: trade.ltfAnalysis?.currentCandleOpen,
     tradeComments: trade.ltfAnalysis?.tradeComments
   };
   return Object.prototype.hasOwnProperty.call(nested, key) ? nested[key] : trade[key];
@@ -1860,27 +1864,33 @@ function getTradeSetupRank(trade) {
   const dayBias = getTradeField(trade, "dayBias");
   const direction = trade.direction;
   const poiBacking = getComparableValues(getTradeField(trade, "htfPoiBackedBy"));
-  const validPoiBacking = poiBacking.filter((value) => value.toLowerCase() !== "none");
-  const biasAligned = ((direction === "Long" || direction === "Buy") && dayBias === "Buy")
-    || ((direction === "Short" || direction === "Sell") && dayBias === "Sell");
+  const isBuy = direction === "Long" || direction === "Buy";
+  const isSell = direction === "Short" || direction === "Sell";
+  const biasAligned = (isBuy && dayBias === "Buy") || (isSell && dayBias === "Sell");
+  const dayBiasPros = getComparableValues(getTradeField(trade, "dayBiasPros"));
   const smtStrength = getTradeField(trade, "smtStrength");
-  const hasQualifyingSmt = getTradeField(trade, "hasSmt") === "Yes"
-    && ["Weak SMT", "Strong SMT"].includes(smtStrength);
-  const poiZone = getTradeField(trade, "poiZone");
-  const locationAligned = (dayBias === "Buy" && poiZone === "Discount")
-    || (dayBias === "Sell" && poiZone === "Premium");
+  const expectedSmt = isBuy ? "Strong SMT" : isSell ? "Weak SMT" : "";
+  const smtAligned = Boolean(expectedSmt) && smtStrength === expectedSmt;
   const dailyOpenPosition = getTradeField(trade, "dailyOpenPosition");
-  const dailyOpenAligned = (dayBias === "Buy" && dailyOpenPosition === "Below Daily Open")
-    || (dayBias === "Sell" && dailyOpenPosition === "Above Daily Open");
+  const dailyOpenAligned = (isBuy && dailyOpenPosition === "Below Daily Open")
+    || (isSell && dailyOpenPosition === "Above Daily Open");
+  const hasOtherPairing = poiBacking.some((value) => value.toLowerCase() === "order pairing");
+  const poiZone = getTradeField(trade, "poiZone");
+  const poiZoneAligned = (isBuy && poiZone === "Discount") || (isSell && poiZone === "Premium");
+  const currentCandleOpen = getTradeField(trade, "currentCandleOpen");
+  const ccoAligned = (isBuy && currentCandleOpen === "Below")
+    || (isSell && currentCandleOpen === "Above");
   const checks = [
-    { label: "Direction and Day Bias", passed: biasAligned, detail: biasAligned ? `${direction} matches the ${dayBias} day bias` : `${direction || "No direction"} must match the ${dayBias || "recorded"} day bias` },
-    { label: "Daily Open Position", passed: dailyOpenAligned, detail: dailyOpenAligned ? `${dayBias} is correctly positioned ${dailyOpenPosition}` : "Buy needs Below Daily Open and Sell needs Above Daily Open" },
-    { label: "POI Backed By", passed: validPoiBacking.length > 0, detail: validPoiBacking.length ? validPoiBacking.join(", ") : "Select at least one POI backing other than None" },
-    { label: "SMT", passed: hasQualifyingSmt, detail: hasQualifyingSmt ? smtStrength : "SMT must be Yes with Weak SMT or Strong SMT" },
-    { label: "Premium / Discount", passed: locationAligned, detail: locationAligned ? `${dayBias} at ${poiZone}` : `${dayBias || "Bias not recorded"} at ${poiZone || "unrecorded location"}; Buy needs Discount and Sell needs Premium` }
+    { label: "Direction and Day Bias", passed: biasAligned, detail: biasAligned ? `${direction} matches the ${dayBias} day bias` : "Buy requires Buy bias; Sell requires Sell bias" },
+    { label: "Day Bias Check (Pro)", passed: dayBiasPros.length > 0, detail: dayBiasPros.length ? dayBiasPros.join(", ") : "Select at least one Day Bias Check (Pro) option" },
+    { label: "SMT", passed: smtAligned, detail: smtAligned ? smtStrength : "Buy requires Strong SMT; Sell requires Weak SMT" },
+    { label: "Daily Open Position", passed: dailyOpenAligned, detail: dailyOpenAligned ? dailyOpenPosition : "Buy requires Below Daily Open; Sell requires Above Daily Open" },
+    { label: "Premium / Discount", passed: poiZoneAligned, detail: poiZoneAligned ? poiZone : "Buy requires Discount; Sell requires Premium" },
+    { label: "POI Backed By", passed: hasOtherPairing, detail: hasOtherPairing ? "Order Pairing selected" : "Select Order Pairing" },
+    { label: "Current Candle Open", passed: ccoAligned, detail: ccoAligned ? currentCandleOpen : "Buy requires Below CCO; Sell requires Above CCO" }
   ];
   const score = checks.filter((check) => check.passed).length;
-  const grade = score === checks.length ? "A+" : score === 4 ? "A" : score === 3 ? "B" : score === 2 ? "C" : "D";
+  const grade = score === checks.length ? "A+" : score === checks.length - 1 ? "A" : score === checks.length - 2 ? "B" : score === checks.length - 3 ? "C" : "D";
 
   return {
     grade,
@@ -2101,7 +2111,7 @@ function getWeeklyWinningEdgeCombination(completedTrades, winningTrades) {
 }
 
 function renderSimilarityList(container, subset) {
-  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "dayBias", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "rrAdjusted", "entryTrigger", "tradeComments"];
+  const insightKeys = ["direction", "session", "fvgStatus", "fvgFormed", "dayBias", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "thirdCandle", "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "beLogic", "rrAdjusted", "entryTrigger", "currentCandleOpen", "tradeComments"];
   const insights = insightKeys.map((key) => mostCommonInsight(subset, key)).filter(Boolean).slice(0, 6);
   if (!insights.length) {
     container.innerHTML = '<p class="empty-insight">Not enough recorded trades for a similarity pattern.</p>';
@@ -2172,6 +2182,7 @@ function renderEdgeCards(filtered) {
     ["BEST BE LOGIC", "beLogic", false],
     ["BEST ENTRY RR ADJUSTMENT", "rrAdjusted", false],
     ["BEST ENTRY TRIGGER", "entryTrigger", false],
+    ["BEST CURRENT CANDLE OPEN", "currentCandleOpen", false],
     ["WORST MITIGATION", "poiMitigation", true]
   ];
   elements.edgeCards.innerHTML = definitions.map(([title, key, worst]) => {
@@ -2560,6 +2571,7 @@ function reviewChartWorkspace(trade) {
         ["Break Even Level", getTradeField(trade, "beLogic")],
         ["Entry Adjusted for RR", getTradeField(trade, "rrAdjusted")],
         ["Entry Trigger", getTradeField(trade, "entryTrigger")],
+        ["Current Candle Open", getTradeField(trade, "currentCandleOpen")],
         ["Result", trade.result],
         ["Risk / Reward", optionalNumber(trade.rr) === null ? "Not recorded" : `${optionalNumber(trade.rr).toFixed(2)}R`],
         ["About the Trade", getTradeField(trade, "tradeComments")]
@@ -2945,7 +2957,7 @@ function exportCsv() {
   const headers = [
     "date", "pair", "direction", "status", "setupGrade", "entryAttempt", "fvgStatus", "fvgFormed",
     "dayBias", "dailyOpenPosition", "dayBiasPros", "dayBiasCons", "hasSmt", "smtStrength", "smtPair", "thirdCandle",
-    "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "slPips", "beLogic", "rrAdjusted", "entryTrigger", "tradeComments", "result", "riskAmount", "rr", "pnl"
+    "fvgInteraction", "poiZone", "cleanHtfCisd", "htfCisdLocation", "poiMitigation", "htfPoiBackedBy", "entryLevel", "slPips", "beLogic", "rrAdjusted", "entryTrigger", "currentCandleOpen", "tradeComments", "result", "riskAmount", "rr", "pnl"
   ];
   const rows = trades.map((trade) => {
     const flat = {
@@ -2969,6 +2981,7 @@ function exportCsv() {
       beLogic: trade.ltfAnalysis?.beLogic,
       rrAdjusted: trade.ltfAnalysis?.rrAdjusted,
       entryTrigger: trade.ltfAnalysis?.entryTrigger,
+      currentCandleOpen: trade.ltfAnalysis?.currentCandleOpen,
       tradeComments: getComparableValues(trade.ltfAnalysis?.tradeComments).join(" | ")
     };
     return headers.map((key) => csvCell(flat[key])).join(",");

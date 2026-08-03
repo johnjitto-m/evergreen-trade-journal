@@ -420,6 +420,11 @@
                         type="button">×</button>
                 </div>
             </div>
+            <div class="step-tabs" id="stepTabs">
+                <button class="step-tab active" type="button" data-step-target="basic">1 Basic</button>
+                <button class="step-tab" type="button" data-step-target="htf">2 HTF</button>
+                <button class="step-tab" type="button" data-step-target="ltf">3 LTF</button>
+            </div>
             <section class="wizard-step" data-step="basic" id="basicStep">
                 <form id="basicTradeForm" novalidate="">
                     <section class="form-section">
@@ -775,14 +780,7 @@
                                 id="openActiveLtfPreviewBtn" type="button">Open Active LTF Snapshot</button>
                         </aside>
                         <div class="analysis-questions" id="ltfQuestions">
-                            <fieldset class="analysis-question-card">
-                                <legend class="section-label">STOP-LOSS PIP</legend>
-                                <label class="number-field">
-                                    <input id="slPips" inputmode="decimal" min="0" name="slPips"
-                                        placeholder="Example: 5.0" step="0.1" type="number" />
-                                </label>
-                            </fieldset>
-                            <fieldset class="analysis-question-card">
+                                                        <fieldset class="analysis-question-card">
                                 <legend class="section-label">ENTRY OPTION</legend>
                                 <div class="choice-grid choice-grid-3 compact-choices">
                                     <label class="choice-card">
@@ -800,15 +798,22 @@
                                 </div>
                             </fieldset>
                             <fieldset class="analysis-question-card">
-                                <legend class="section-label">BREAK EVEN LEVEL</legend>
+                                <legend class="section-label">STOP-LOSS PIP</legend>
+                                <label class="number-field">
+                                    <input id="slPips" inputmode="decimal" min="0" name="slPips"
+                                        placeholder="Example: 5.0" step="0.1" type="number" />
+                                </label>
+                            </fieldset>
+                            <fieldset class="analysis-question-card">
+                                <legend class="section-label">CURRENT CANDLE OPEN (CCO)</legend>
                                 <div class="choice-grid choice-grid-2 compact-choices">
                                     <label class="choice-card">
-                                        <input name="beLogic" type="radio" value="Counter FVG Mitigation" />
-                                        <strong>Counter FVG Mitigation</strong>
+                                        <input name="currentCandleOpen" type="radio" value="Above" />
+                                        <strong>ABOVE</strong>
                                     </label>
                                     <label class="choice-card">
-                                        <input name="beLogic" type="radio" value="ERL" />
-                                        <strong>ERL</strong>
+                                        <input name="currentCandleOpen" type="radio" value="Below" />
+                                        <strong>BELOW</strong>
                                     </label>
                                 </div>
                             </fieldset>
@@ -822,6 +827,32 @@
                                     <label class="choice-card">
                                         <input name="rrAdjusted" type="radio" value="No" />
                                         <strong>NO</strong>
+                                    </label>
+                                </div>
+                            </fieldset>
+                            <fieldset class="analysis-question-card">
+                                <legend class="section-label">ENTRY TRIGGER</legend>
+                                <div class="choice-grid choice-grid-2 compact-choices">
+                                    <label class="choice-card">
+                                        <input name="entryTrigger" type="radio" value="None" />
+                                        <strong>NONE</strong>
+                                    </label>
+                                    <label class="choice-card">
+                                        <input name="entryTrigger" type="radio" value="Coming From Counter FVG" />
+                                        <strong>COMING FROM FVG</strong>
+                                    </label>
+                                </div>
+                            </fieldset>
+                            <fieldset class="analysis-question-card">
+                                <legend class="section-label">BREAK EVEN LEVEL</legend>
+                                <div class="choice-grid choice-grid-2 compact-choices">
+                                    <label class="choice-card">
+                                        <input name="beLogic" type="radio" value="Counter FVG Mitigation" />
+                                        <strong>Counter FVG Mitigation</strong>
+                                    </label>
+                                    <label class="choice-card">
+                                        <input name="beLogic" type="radio" value="ERL" />
+                                        <strong>ERL</strong>
                                     </label>
                                 </div>
                             </fieldset>
@@ -844,12 +875,12 @@
                                     </div>
                                     <div class="outcome-fields">
                                         <label class="number-field">
-                                            <span>Risk $</span>
+                                            <!-- <span>Risk $</span> -->
                                             <input id="riskAmount" inputmode="decimal" min="0" name="riskAmount"
                                                 placeholder="50" step="0.01" type="number" value="50" />
                                         </label>
                                         <label class="number-field">
-                                            <span>RR</span>
+                                            <!-- <span>RR</span> -->
                                             <input id="riskReward" inputmode="decimal" min="0" name="riskReward"
                                                 placeholder="4" step="0.01" type="number" />
                                         </label>
@@ -857,19 +888,6 @@
                                             <strong id="calculatedPnl">$0.00</strong>
                                         </div>
                                     </div>
-                                </div>
-                            </fieldset>
-                            <fieldset class="analysis-question-card entry-trigger-card">
-                                <legend class="section-label">ENTRY TRIGGER</legend>
-                                <div class="choice-grid choice-grid-2 compact-choices">
-                                    <label class="choice-card">
-                                        <input name="entryTrigger" type="radio" value="None" />
-                                        <strong>NONE</strong>
-                                    </label>
-                                    <label class="choice-card">
-                                        <input name="entryTrigger" type="radio" value="Coming From Counter FVG" />
-                                        <strong>COMING FROM COUNTER FVG</strong>
-                                    </label>
                                 </div>
                             </fieldset>
                             <fieldset class="analysis-question-card ltf-trade-comments-card">

@@ -1310,9 +1310,6 @@ body.modal-open {
     grid-column: span 2;
   }
 }
-.trade-modal.analysis-mode .step-tabs {
-  display: none;
-}
 
 /* Professional layout refinements and full research dashboard */
 .page-view[hidden],
@@ -6439,7 +6436,8 @@ button.setup-grade-metric {
   }
 
   #tradeModal #ltfQuestions > .analysis-question-card:nth-child(5) {
-    grid-column: 1 / -1 !important;
+    position: relative !important;
+    grid-column: 1 !important;
     grid-row: 3 !important;
     display: block !important;
     padding: 16px !important;
@@ -6460,8 +6458,25 @@ button.setup-grade-metric {
   }
 
   #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) {
-    grid-column: 1 / -1 !important;
-    grid-row: 4 !important;
+    position: relative !important;
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) > .entry-trigger-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    position: absolute !important;
+    top: 12px !important;
+    bottom: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    margin: 0 !important;
   }
 }
 
@@ -6492,18 +6507,71 @@ button.setup-grade-metric {
   }
 
   #tradeModal #ltfQuestions > .analysis-question-card:nth-child(5) {
-    grid-column: 2 !important;
-    grid-row: 3 !important;
-  }
-
-  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) {
-    position: relative !important;
     grid-column: 1 !important;
     grid-row: 3 !important;
+    position: relative !important;
     padding: 12px !important;
     overflow: hidden !important;
   }
 
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(5) > .trade-outcome-controls {
+    position: absolute !important;
+    top: 50% !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    transform: translateY(-50%) !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    position: relative !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) > .entry-trigger-grid {
+    position: absolute !important;
+    top: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(7) {
+    grid-column: 1 / -1 !important;
+    grid-row: 4 !important;
+  }
+}
+
+/* Keep Entry Trigger and CCO as standard question cards, matching RR adjustment. */
+@media (min-width: 1021px) {
+  #tradeModal #ltfQuestions {
+    grid-template-rows:
+      minmax(82px, 0.72fr)
+      minmax(82px, 0.72fr)
+      minmax(82px, 0.72fr)
+      minmax(185px, 1fr)
+      minmax(135px, 1fr) !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(5),
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) {
+    grid-row: 3 !important;
+    padding: 12px !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(5) {
+    grid-column: 1 !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) {
+    grid-column: 2 !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(5) > .choice-grid,
   #tradeModal #ltfQuestions > .analysis-question-card:nth-child(6) > .choice-grid {
     position: absolute !important;
     top: 50% !important;
@@ -6511,12 +6579,33 @@ button.setup-grade-metric {
     right: 12px !important;
     width: auto !important;
     margin: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     transform: translateY(-50%) !important;
   }
 
   #tradeModal #ltfQuestions > .analysis-question-card:nth-child(7) {
     grid-column: 1 / -1 !important;
     grid-row: 4 !important;
+    position: relative !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(7) .choice-grid,
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(7) .outcome-fields {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(7) .outcome-fields {
+    margin-top: 14px !important;
+  }
+
+  #tradeModal #ltfQuestions > .analysis-question-card:nth-child(8) {
+    grid-column: 1 / -1 !important;
+    grid-row: 5 !important;
   }
 }
 
