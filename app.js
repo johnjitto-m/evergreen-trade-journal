@@ -41,14 +41,14 @@ const DEFAULT_OPTIONS = {
     "Second FVG Mitigation Without failing the First"
   ],
   htfPoiBackedBy: [
-    "None",
-    "SC OB",
-    "SC FVG",
-    "IFVG",
+    "NONE",
+    "ORDER PAIRING",
     "FVG",
+    "IFVG",
+    "SWEEP CHOCH",
+    "OB",
     "BREAKER BLOCK",
     "LIQUIDITY SWEEP",
-    "ORDER PAIRING",
     "CISD INSIDE FVG",
     "CISD OUTSIDE FVG"
   ],
@@ -74,7 +74,9 @@ const REMOVED_POI_MITIGATION_OPTIONS = new Set([
 ]);
 const REMOVED_POI_BACKING_OPTIONS = new Set([
   "liq sweep",
-  "previous day high / low sweep"
+  "previous day high / low sweep",
+  "sc ob",
+  "sc fvg"
 ]);
 
 function getAvailableTradeComments(values) {
